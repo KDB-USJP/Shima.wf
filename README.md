@@ -8,11 +8,12 @@ Shima (島, Japanese for "island") treats workflows as composable building block
 
 ## Features
 
-- **Island Marketplace** - Purchase individual islands from shima.wf
+- **Island Marketplace** - Download or Purchase free and premium individual islands from shima.wf
 - **Subscription Tiers** - Access different categories (images, video, 3D, audio)
-- **Auto-Linking** - Islands connect automatically via Use Everywhere
+- **Auto-Linking** - Islands can connect automatically via Use Everywhere
 - **Subgraph Encapsulation** - Clean interfaces, hidden complexity
 - **Dependency Checking** - Notifies users of required nodes/models
+- **Large node library** - A library of extremely custom nodes across 13 categories
 
 ## Installation
 
