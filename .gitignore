@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# User-specific config
+config/auth.json
+config/shima_settings.json
+
+# Local data
+data/
+*.db
+
+# Large binary assets (download separately)
+assets/styles/**/*.png
+assets/styles/**/*.jpg
+assets/styles/**/*.jpeg
+assets/styles/**/*.webp
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development artifacts
+docs/design_docs/
+docs/developer_docs/
+docs/in-progress_docs/
+docs/internal/
+docs/media/
+test_*.py
+verify_*.py
+verification_output.txt
+clean_pycache.py
+export_synced_islands.py
+*.disabled
+*.DISABLED
+*.backup
+js/experiments/
