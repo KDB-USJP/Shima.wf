@@ -25,7 +25,7 @@ class ShimaInspector:
     RETURN_NAMES = tuple(f"any_{i:02d}" for i in range(1, 11))
     OUTPUT_NODE = True
     FUNCTION = "inspect_and_pass"
-    CATEGORY = "Shima/Debug"
+    CATEGORY = "Shima/Hidden"
     
     def inspect_and_pass(self, **kwargs):
         # Prepare list for UI

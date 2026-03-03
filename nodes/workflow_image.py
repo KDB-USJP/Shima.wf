@@ -61,7 +61,7 @@ class ShimaWorkflowImage:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "generate"
-    CATEGORY = "Shima/Workflow"
+    CATEGORY = "Shima/Design"
     OUTPUT_NODE = True 
 
     def _get_font(self, font_name, size):

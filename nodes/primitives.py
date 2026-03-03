@@ -43,7 +43,7 @@ class ShimaInt:
     RETURN_TYPES = ("INT",)
     RETURN_NAMES = ("value",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Primitives"
+    CATEGORY = "Shima/Utilities"
     
     def execute(self, value, expression, a=None, b=None, c=None, **kwargs):
         # Default fallbacks
@@ -95,7 +95,7 @@ class ShimaFloat:
     RETURN_TYPES = ("FLOAT",)
     RETURN_NAMES = ("value",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Primitives"
+    CATEGORY = "Shima/Utilities"
     
     def execute(self, value, expression, a=None, b=None, c=None, **kwargs):
         ctx = {
@@ -133,7 +133,7 @@ class ShimaString:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Primitives"
+    CATEGORY = "Shima/Utilities"
     
     def execute(self, text, override=None, **kwargs):
         final = override if override is not None else text

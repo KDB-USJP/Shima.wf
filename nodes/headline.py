@@ -32,7 +32,7 @@ class ShimaHeadline:
 
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Branding"
+    CATEGORY = "Shima/Design"
     OUTPUT_NODE = True 
 
     def execute(self, text, font_name, font_size, alignment, color, opacity):

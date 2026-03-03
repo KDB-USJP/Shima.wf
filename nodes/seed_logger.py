@@ -33,7 +33,7 @@ class ShimaSeedLogger:
     RETURN_TYPES = ()
     OUTPUT_NODE = True
     FUNCTION = "log_seed"
-    CATEGORY = "Shima/Logger"
+    CATEGORY = "Shima/System"
     
     def log_seed(self, s33d, history_limit):
         try:

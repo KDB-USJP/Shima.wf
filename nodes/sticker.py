@@ -36,7 +36,7 @@ class ShimaSticker:
 
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Branding"
+    CATEGORY = "Shima/Design"
     OUTPUT_NODE = True 
     
     def execute(self, logo, opacity, scale):

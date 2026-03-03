@@ -27,7 +27,7 @@ class ShimaContent:
     RETURN_TYPES = ("CONTENT_BUNDLE",)
     RETURN_NAMES = ("content_bundle",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/RichContent"
+    CATEGORY = "Shima/Utilities"
     
     def execute(self, content_type, title, content, show_title, input_content=None, **kwargs):
         # Prefer input_content if connected
@@ -64,7 +64,7 @@ class ShimaRichDisplay:
     RETURN_TYPES = ("CONTENT_BUNDLE",)
     RETURN_NAMES = ("content_bundle",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/RichContent"
+    CATEGORY = "Shima/Utilities"
     
     def execute(self, content_bundle, title_override=None, **kwargs):
         # Prepare UI payload

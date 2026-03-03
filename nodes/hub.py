@@ -25,7 +25,7 @@ class ShimaHub:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("STATUS",)
     FUNCTION = "get_status"
-    CATEGORY = "Shima/Setup"
+    CATEGORY = "Shima/Panels"
 
     def get_status(self, active_pack, auto_update, custom_download_url=""):
         # This can report the current asset path and pack status

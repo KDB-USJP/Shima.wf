@@ -63,7 +63,7 @@ class ShimaCarouselPreview:
     OUTPUT_TOOLTIPS = ("Information about current group",)
     
     FUNCTION = "preview"
-    CATEGORY = "Shima/Preview"
+    CATEGORY = "Shima/Image"
     OUTPUT_NODE = True
     
     DESCRIPTION = "Carousel preview for browsing multiple groups of images from MultiSaver. Navigate between batch groups with prev/next buttons."

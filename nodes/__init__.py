@@ -48,7 +48,8 @@ from .inspector import ShimaInspector
 from .batch_processor import ShimaBatchImageProcessor
 from .smart_reroute import NODE_CLASS_MAPPINGS as SMART_REROUTE_NODES
 from .smart_reroute import NODE_DISPLAY_NAME_MAPPINGS as SMART_REROUTE_DISPLAY_NAMES
-
+from .datapreview_test import NODE_CLASS_MAPPINGS as DATAPREVIEW_TEST_NODES
+from .datapreview_test import NODE_DISPLAY_NAME_MAPPINGS as DATAPREVIEW_TEST_DISPLAY_NAMES
 from .workflow_image import ShimaWorkflowImage
 from .model_citizen import ShimaModelCitizen, ShimaLoraStack, ShimaPanelModelCitizen
 from .photo_remix import ShimaPhotoRemix
@@ -85,7 +86,7 @@ NODE_CLASS_MAPPINGS = {
     **MASTER_PROMPT_NODES,
     **SMART_REROUTE_NODES,
     **TRANSFORMER_NODES,
-
+    **DATAPREVIEW_TEST_NODES,
     "Shima.SeedLogger": ShimaSeedLogger,
     "Shima.Inspector": ShimaInspector,
     "Shima.BatchImageProcessor": ShimaBatchImageProcessor,
@@ -123,7 +124,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     **MASTER_PROMPT_DISPLAY_NAMES,
     **SMART_REROUTE_DISPLAY_NAMES,
     **TRANSFORMER_DISPLAY_NAMES,
-
+    **DATAPREVIEW_TEST_DISPLAY_NAMES,
     "Shima.SeedLogger": "Shima Seed Logger",
     "Shima.Inspector": "Shima Inspector",
     "Shima.BatchImageProcessor": "Shima Batch Image Processor",

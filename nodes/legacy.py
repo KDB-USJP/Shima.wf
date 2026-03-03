@@ -322,7 +322,7 @@ class ShimaMultiPipeIn15:
     RETURN_TYPES = ("PIPE_LINE", )
     RETURN_NAMES = ("pipe", )
     FUNCTION = "execute"
-    CATEGORY = "Shima/Utilities/Pipes"
+    CATEGORY = "Shima/Routing"
     def execute(self, image=0, mask=0, latent=0, model=0, vae=0, clip=0, positive=0, negative=0,image_width=0, image_height=0, latent_width=0, latent_height=0):
         pipe_line = (image, mask, latent, model, vae, clip, positive, negative, image_width, image_height, latent_width, latent_height)
         return (pipe_line, )
@@ -334,7 +334,7 @@ class ShimaMultiPipeOut15:
     RETURN_TYPES = ("PIPE_LINE", "IMAGE", "MASK", "LATENT", "MODEL", "VAE", "CLIP", "CONDITIONING", "CONDITIONING", "INT", "INT", "INT", "INT",)
     RETURN_NAMES = ("pipe", "image", "mask", "latent", "model", "vae", "clip", "positive", "negative", "image_width", "image_height", "latent_width", "latent_height",)  
     FUNCTION = "execute"
-    CATEGORY = "Shima/Utilities/Pipes"
+    CATEGORY = "Shima/Routing"
     def execute(self, pipe):
         image, mask, latent, model, vae, clip, positive, negative, image_width, image_height, latent_width, latent_height  = pipe 
         return (pipe, image, mask, latent, model, vae, clip, positive, negative, image_width, image_height, latent_width, latent_height,)
@@ -368,7 +368,7 @@ class ShimaMultiPipeInXL:
     RETURN_TYPES = ("PIPE_LINE", )
     RETURN_NAMES = ("pipe", )
     FUNCTION = "execute"
-    CATEGORY = "Shima/Utilities/Pipes"
+    CATEGORY = "Shima/Routing"
     def execute(self, image=0, sdxl_tuple=0, mask=0, latent=0, model=0, vae=0, clip=0, positive=0, negative=0, refiner_model=0, refiner_vae=0, refiner_clip=0, refiner_positive=0, refiner_negative=0, image_width=0, image_height=0, latent_width=0, latent_height=0 ):
         pipe_line = (image, mask, sdxl_tuple, latent, model, vae, clip, positive, negative, refiner_model, refiner_vae, refiner_clip, refiner_positive, refiner_negative, image_width, image_height, latent_width, latent_height)
         return (pipe_line, )
@@ -380,7 +380,7 @@ class ShimaMultiPipeOutXL:
     RETURN_TYPES = ("IMAGE", "MASK", "SDXL_TUPLE", "LATENT", "MODEL", "VAE", "CLIP", "CONDITIONING", "CONDITIONING", "MODEL", "VAE", "CLIP", "CONDITIONING", "CONDITIONING", "INT", "INT", "INT", "INT",) 
     RETURN_NAMES = ("image", "mask", "sdxl_tuple", "latent", "model", "vae", "clip", "positive", "negative", "refiner_model", "refiner_vae", "refiner_clip", "refiner_positive", "refiner_negative", "image_width", "image_height", "latent_width", "latent_height",) 
     FUNCTION = "execute"
-    CATEGORY = "Shima/Utilities/Pipes"
+    CATEGORY = "Shima/Routing"
     def execute(self, pipe):
         image, mask, sdxl_tuple, latent, model, vae, clip, positive, negative, refiner_model, refiner_vae, refiner_clip, refiner_positive, refiner_negative, image_width, image_height, latent_width, latent_height = pipe  
         return (image, mask, sdxl_tuple, latent, model, vae, clip, positive, negative, refiner_model, refiner_vae, refiner_clip, refiner_positive, refiner_negative, image_width, image_height, latent_width, latent_height, ) 
@@ -402,7 +402,7 @@ class ShimaBrightnessContrast:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, image, mode, strength, enabled):
         if enabled:
             if mode == "brightness":
@@ -423,7 +423,7 @@ class ShimaImageFlip:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, image, flip_type, enabled):
         if not enabled:
             return (image,)
@@ -450,7 +450,7 @@ class ShimaGaussianBlur:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, image, strength, enabled):
         if not enabled:
             return (image,)
@@ -470,7 +470,7 @@ class ShimaFlattenColors:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, images, number_of_colors):
         total_images = []
         for image in images:
@@ -491,7 +491,7 @@ class ShimaHueRotation:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, images, hue_rotation):
         total_images = []
         for image in images:
@@ -516,7 +516,7 @@ class ShimaSwapColorMode:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, images, color_mode='default'):
         total_images = []
         for image in images:
@@ -550,7 +550,7 @@ class ShimaInstagramFilters:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, images, instagram_filter):
         total_images = []
         filter_fn = getattr(pilgram, instagram_filter)
@@ -583,7 +583,7 @@ class ShimaGlitchEffect:
         }
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/FX"
+    CATEGORY = "Shima/Image"
     def execute(self, images, glitch_amount=1, color_offset='Disable', scan_lines='Disable', seed=0):
         glitcher = ImageGlitcher()
         total_images = []

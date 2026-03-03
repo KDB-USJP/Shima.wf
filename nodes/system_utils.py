@@ -262,7 +262,7 @@ class ShimaSystemBuffer:
     RETURN_TYPES = ("LATENT", "IMAGE", "STRING")
     RETURN_NAMES = ("latent", "image", "status")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Precision"
+    CATEGORY = "Shima/System"
 
     def execute(self, latent, buffer_mode="Accurate", v_depth=1.0, image=None, opt_payload=None, _buffer_data="", signature="", island_id="", buyer_id="", prompt=None, extra_pnginfo=None):
         out_latent = latent.copy()

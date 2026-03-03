@@ -42,7 +42,7 @@ class ShimaTransformer:
     RETURN_TYPES = (ANY, ANY, ANY, ANY)
     RETURN_NAMES = ("out_1", "out_2", "out_3", "out_4")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Transformer"
+    CATEGORY = "Shima/Utilities"
 
     def infer_type(self, val_str, force_string=False):
         if force_string:

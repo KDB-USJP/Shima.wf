@@ -40,7 +40,7 @@ class ShimaBatchImageProcessor:
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "STRING", "STRING", "INT", "INT")
     RETURN_NAMES = ("image", "mask", "parent_path", "relative_path", "filename", "current_index", "total_count")
     FUNCTION = "load_image"
-    CATEGORY = "Shima/Batch"
+    CATEGORY = "Shima/Image"
     
     DESCRIPTION = (
         "Iterates over a folder of images.\n"

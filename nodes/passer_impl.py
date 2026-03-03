@@ -25,7 +25,7 @@ class ShimaPasser:
     RETURN_TYPES = ("DICT", "INT", "INT", "INT", "STRING", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("shima.commonparams", "SEED", "WIDTH", "HEIGHT", "PROJECT_NAME", "SAVE_PATH", "COLLISION_ID", "TIMESTAMP")
     FUNCTION = "unpack"
-    CATEGORY = "Shima/Commons"
+    CATEGORY = "Shima/Panels"
     
     def unpack(self, shima_commonparams, **kwargs):
         # Unpack values from bundle

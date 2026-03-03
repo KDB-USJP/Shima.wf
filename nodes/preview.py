@@ -103,7 +103,7 @@ class ShimaPreview:
     OUTPUT_TOOLTIPS = ("Passthrough of input images.", "Paths to preview images (semicolon separated).")
     
     FUNCTION = "preview"
-    CATEGORY = "Shima/Preview"
+    CATEGORY = "Shima/Image"
     OUTPUT_NODE = True
     
     DESCRIPTION = "Preview with Copy, Edit, and Save buttons. Connect FileNamer for organized saving."

@@ -210,7 +210,7 @@ class NSFWContentChecker:
     )
 
     FUNCTION = "check_and_censor"
-    CATEGORY = "Shima/Safety"
+    CATEGORY = "Shima/System"
 
     # Persistent model instances
     _nsfw_classifier = None

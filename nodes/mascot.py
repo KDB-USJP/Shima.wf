@@ -23,7 +23,7 @@ class ShimaNoodmanSticker:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "process"
-    CATEGORY = "Shima/Mascot"
+    CATEGORY = "Shima/Design"
 
     def process(self, image, animation, frame_index, coordinate, columns, rows):
         # This backend node primarily acts as a vessel for the image data.

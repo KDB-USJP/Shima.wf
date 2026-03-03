@@ -97,6 +97,10 @@ function addShimaToolbar(node, buttonNames) {
 
     const origDrawForeground = node.onDrawForeground;
     node.onDrawForeground = function (ctx) {
+        if (this.flags.collapsed) {
+            if (origDrawForeground) origDrawForeground.call(this, ctx);
+            return;
+        }
         ctx.save();
 
         // Draw toolbar background
@@ -182,6 +186,10 @@ function addShimaToolbar(node, buttonNames) {
     // Handle clicks in toolbar
     const origOnMouseDown = node.onMouseDown;
     node.onMouseDown = function (e, localPos, canvas) {
+        if (this.flags.collapsed) {
+            if (origOnMouseDown) return origOnMouseDown.call(this, e, localPos, canvas);
+            return;
+        }
         if (this.toolbarButtons) {
             for (const btn of this.toolbarButtons) {
                 if (localPos[0] >= btn.x && localPos[0] <= btn.x + btn.width &&
@@ -210,6 +218,10 @@ function addShimaToolbar(node, buttonNames) {
     // Handle hover for tooltips
     const origOnMouseMove = node.onMouseMove;
     node.onMouseMove = function (e, localPos, canvas) {
+        if (this.flags.collapsed) {
+            if (origOnMouseMove) return origOnMouseMove.call(this, e, localPos, canvas);
+            return;
+        }
         let tooltip = null;
         if (this.toolbarButtons) {
             for (const btn of this.toolbarButtons) {
@@ -236,7 +248,9 @@ function addShimaToolbar(node, buttonNames) {
     const origComputeSize = node.computeSize;
     node.computeSize = function (out) {
         const size = origComputeSize ? origComputeSize.call(this, out) : [200, 100];
-        size[1] += toolbarHeight;
+        if (!this.flags.collapsed) {
+            size[1] += toolbarHeight;
+        }
         return size;
     };
 

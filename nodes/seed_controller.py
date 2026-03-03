@@ -77,7 +77,7 @@ class ShimaSeedController:
     )
     
     FUNCTION = "process"
-    CATEGORY = "Shima/Seed"
+    CATEGORY = "Shima/Sampling"
     OUTPUT_NODE = True  # Ensures this node always executes
     
     DESCRIPTION = "Control seed behavior with connectable inputs. Place at top level and connect to external_seed inputs inside subgraphs."

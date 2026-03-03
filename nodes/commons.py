@@ -71,7 +71,7 @@ class ShimaCommons:
     RETURN_NAMES = ("shima.commonparams", "s33d", "WIDTH", "HEIGHT", "PROJECT_NAME", "SAVE_PATH", "COLLISION_ID", "TIMESTAMP", "CONTROL_AFTER_GENERATE")
     OUTPUT_NODE = True
     FUNCTION = "execute"
-    CATEGORY = "Shima/Commons"
+    CATEGORY = "Shima/Panels"
     
     # Class-level storage for persistence
     _previous_seeds = {}
