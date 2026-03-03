@@ -405,7 +405,7 @@ class ShimaBreaker:
     RETURN_TYPES = ("INT",)
     RETURN_NAMES = ("sync_state",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Switch"
+    CATEGORY = "Shima/Routing"
 
     def execute(self, breaker_state=0, sync_mode=0, switch_automate=None, scale=1.0, **kwargs):
         # Automation takes precedence
@@ -434,7 +434,7 @@ class ShimaPanelSwitch:
     RETURN_TYPES = (ANY, "BOOLEAN")
     RETURN_NAMES = ("passthrough", "boolean")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Switch"
+    CATEGORY = "Shima/Routing"
 
     def execute(self, data=None, switch_state=0, sync_input=None, **kwargs):
         # If sync_input is provided (automation), determine the state
@@ -466,7 +466,7 @@ class ShimaPilotLight:
         }
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, any_input, base_color, trigger_type="Boolean", comparison_value="", scale=1.0):
         state = False
@@ -522,7 +522,7 @@ class ShimaDymoLabel:
         }
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, **kwargs):
         return ()
@@ -547,7 +547,7 @@ class ShimaMultiStateIndicator:
         }
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, any_input, color_1, color_2, color_off, trigger_type, state_1_value, state_2_value, scale=1.0):
         state = 0
@@ -587,7 +587,7 @@ class ShimaRGBIndicator:
     RETURN_TYPES = ("STRING", "TUPLE")
     RETURN_NAMES = ("csv_output", "eval_bool")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, r_color, g_color, b_color, r_eval, g_eval, b_eval, trigger_type, scale=1.0, hw_sync_state="false,false,false", r_in=None, g_in=None, b_in=None):
         r_state = False; g_state = False; b_state = False
@@ -715,7 +715,7 @@ class ShimaFader:
     RETURN_TYPES = ("FLOAT", "INT")
     RETURN_NAMES = ("float_val", "int_val")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, value=0.0, scale=1.0, **kwargs):
         # UI handles the persistence and rounding. This just passes it.
@@ -742,7 +742,7 @@ class ShimaKnob:
     RETURN_TYPES = ("FLOAT", "INT")
     RETURN_NAMES = ("float_val", "int_val")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, value=0.0, scale=1.0, **kwargs):
         return (float(value), int(round(value)))
@@ -826,7 +826,7 @@ class ShimaOmnijog:
     RETURN_TYPES = ("MUX",)
     RETURN_NAMES = ("mux_out",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, active_channel="0", **kwargs):
         # JS sets `active_channel` to "0" through "19".
@@ -875,7 +875,7 @@ class ShimaDemux:
     RETURN_TYPES = ("FLOAT", "INT")
     RETURN_NAMES = ("float_val", "int_val")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, mux_in=None, target_channel="", show_labels=True):
         if isinstance(mux_in, dict):
@@ -919,7 +919,7 @@ class ShimaDemuxList:
     RETURN_TYPES = ("STRING", "*")
     RETURN_NAMES = ("string_val", "any_val")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, mux_in=None, target_channel="", options="", show_labels=True):
         f_val = 0.0
@@ -961,7 +961,7 @@ class ShimaCustodian:
         return {"required": {}}
     RETURN_TYPES = ()
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self):
         return ()
@@ -982,7 +982,7 @@ class ShimaControlPanel:
     RETURN_TYPES = ("STRING", "DICT")
     RETURN_NAMES = ("JSON", "DICT")
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hardware"
+    CATEGORY = "Shima/System"
 
     def execute(self, scale=1.0, payload="{}", **kwargs):
         import json
@@ -1009,7 +1009,7 @@ class ShimaPacker_ModelCitizen:
     RETURN_TYPES = ("BNDL",)
     RETURN_NAMES = ("modelcitizen.bndl",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Pipes"
+    CATEGORY = "Shima/Routing"
 
     def execute(self, model, clip, vae):
         bndl = {
@@ -1029,7 +1029,7 @@ class ShimaPacker_LatentMaker:
     RETURN_TYPES = ("BNDL",)
     RETURN_NAMES = ("latentmaker.bndl",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Pipes"
+    CATEGORY = "Shima/Routing"
 
     def execute(self, latent):
         bndl = {
@@ -1048,7 +1048,7 @@ class ShimaPacker_MasterPrompt:
     RETURN_TYPES = ("BNDL",)
     RETURN_NAMES = ("masterprompt.bndl",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Pipes"
+    CATEGORY = "Shima/Routing"
 
     def execute(self, positive, negative):
         bndl = {
@@ -1058,90 +1058,199 @@ class ShimaPacker_MasterPrompt:
         }
         return (bndl,)
 
-class ShimaPanel_DeBNDLer:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {"required": {
-            "modelcitizen.bndl": ("BNDL",),
-            "latentmaker.bndl": ("BNDL",),
-            "masterprompt.bndl": ("BNDL",),
-        }}
-    
-    RETURN_TYPES = ("BNDL", "BNDL", "MODEL", "CLIP", "VAE", "CONDITIONING", "CONDITIONING", "LATENT")
-    RETURN_NAMES = ("modelcitizen_passthrough", "masterprompt_passthrough", "MODEL", "CLIP", "VAE", "POSITIVE", "NEGATIVE", "LATENT")
-    FUNCTION = "execute"
-    CATEGORY = "Shima/Hidden"
-    
-    def execute(self, **kwargs):
-        modelcitizen_bndl = kwargs.get("modelcitizen.bndl")
-        latentmaker_bndl = kwargs.get("latentmaker.bndl")
-        masterprompt_bndl = kwargs.get("masterprompt.bndl")
-        if not all(isinstance(b.get("bndl_type"), str) for b in (modelcitizen_bndl, latentmaker_bndl, masterprompt_bndl)):
-             raise ValueError("[Shima DeBNDLer] Invalid BNDL objects passed from UI.")
-        
-        return (
-            modelcitizen_bndl,
-            masterprompt_bndl,
-            modelcitizen_bndl.get("model"),
-            modelcitizen_bndl.get("clip"),
-            modelcitizen_bndl.get("vae"),
-            masterprompt_bndl.get("pos"),
-            masterprompt_bndl.get("neg"),
-            latentmaker_bndl.get("latent")
-        )
 
-class ShimaPanel_ReBNDLer:
+# ----------------------------------------------------------------
+# BNDL REGISTRY
+# To add support for a new BNDL type in the future:
+#   1. Add an entry to BNDL_REGISTRY below with the schema.
+#   2. The DeBNDLer and ReBNDLer will automatically pick it up.
+#
+# Schema format:
+#   "bndl_type_name": {
+#       "label": "Human-readable name",
+#       "fields": [
+#           ("field_key_in_dict", "COMFYUI_TYPE", "Display Name"),
+#       ]
+#   }
+# ----------------------------------------------------------------
+
+BNDL_REGISTRY = {
+    "modelcitizen": {
+        "label": "Model Citizen",
+        "fields": [
+            ("model", "MODEL", "Model"),
+            ("clip", "CLIP", "Clip"),
+            ("vae", "VAE", "VAE"),
+        ]
+    },
+    "masterprompt": {
+        "label": "Master Prompt",
+        "fields": [
+            ("pos", "CONDITIONING", "Positive"),
+            ("neg", "CONDITIONING", "Negative"),
+        ]
+    },
+    "latentmaker": {
+        "label": "Latent Maker",
+        "fields": [
+            ("latent", "LATENT", "Latent"),
+        ]
+    },
+    "shimasampler": {
+        "label": "Shima Sampler",
+        "fields": [
+            ("image", "IMAGE", "Image"),
+            ("latent", "LATENT", "Latent"),
+            ("s33d_used", "INT", "Seed Used"),
+        ]
+    },
+}
+
+# Pre-compute the union of all possible output types (used by DeBNDLer)
+_ALL_OUTPUT_TYPES = []
+_ALL_OUTPUT_NAMES = []
+_ALL_FIELD_MAP = {}  # (bndl_type, field_key) -> index
+
+_idx = 0
+for bndl_type, schema in BNDL_REGISTRY.items():
+    for field_key, comfy_type, display_name in schema["fields"]:
+        _ALL_OUTPUT_TYPES.append(comfy_type)
+        _ALL_OUTPUT_NAMES.append(f"{display_name} ({schema['label']})")
+        _ALL_FIELD_MAP[(bndl_type, field_key)] = _idx
+        _idx += 1
+
+class ShimaPanel_DeBNDLer:
+    """
+    Unpacks a single BNDL into its component outputs.
+    Auto-detects the BNDL type from the input dictionary, or the user
+    can override with the dropdown. Unmatched outputs will be None.
+    """
     @classmethod
     def INPUT_TYPES(cls):
+        type_choices = [s["label"] for s in BNDL_REGISTRY.values()]
         return {
             "required": {
-                "sampled_latent": ("LATENT",),
-                "modelcitizen_passthrough": ("BNDL",),
-                "masterprompt_passthrough": ("BNDL",),
-                "s33d_used": ("INT", {"default": 0}),
+                "bndl": ("BNDL", {"tooltip": "Any Shima BNDL to unpack"}),
+                "bndl_type": (type_choices, {"default": type_choices[0], "tooltip": "Select which BNDL type to unpack"}),
+                "allow_external_linking": ("BOOLEAN", {"default": False}),
             },
-            "optional": {
-                "image": ("IMAGE",),
-            }
         }
-    
-    RETURN_TYPES = ("IMAGE", "LATENT", "BNDL")
-    RETURN_NAMES = ("Image", "Latent", "shimasampler.bndl")
+
+    RETURN_TYPES = tuple(_ALL_OUTPUT_TYPES) + ("BNDL_SYNC",)
+    RETURN_NAMES = tuple(_ALL_OUTPUT_NAMES) + ("sync",)
     FUNCTION = "execute"
-    CATEGORY = "Shima/Hidden"
-    
-    def execute(self, sampled_latent, modelcitizen_passthrough, masterprompt_passthrough, s33d_used, image=None):
-        import torch
+    CATEGORY = "Shima/Routing"
+    OUTPUT_NODE = True
 
-        shimasampler_bndl = {
-            "bndl_type": "shimasampler",
-            "image": image,
-            "latent": sampled_latent,
-            "s33d_used": s33d_used,
-            "passthrough_modelcitizen": modelcitizen_passthrough,
-            "passthrough_masterprompt": masterprompt_passthrough
-        }
-        return (image, sampled_latent, shimasampler_bndl)
+    def execute(self, bndl, bndl_type, allow_external_linking=False):
+        if not isinstance(bndl, dict) or "bndl_type" not in bndl:
+            raise ValueError("[Shima DeBNDLer] Input is not a valid BNDL dictionary.")
 
-class ShimaUnpacker_ShimaSampler:
+        # Map the dropdown label back to a registry key
+        resolved_type = None
+        for key, schema in BNDL_REGISTRY.items():
+            if schema["label"] == bndl_type:
+                resolved_type = key
+                break
+
+        if resolved_type not in BNDL_REGISTRY:
+            raise ValueError(f"[Shima DeBNDLer] Unknown BNDL type: '{resolved_type}'")
+
+        schema = BNDL_REGISTRY[resolved_type]
+
+        # Build the output tuple: populate matched fields, None for everything else
+        outputs = [None] * len(_ALL_OUTPUT_TYPES)
+        used_values_text = [f"Type: {schema['label']}"]
+
+        for field_key, comfy_type, display_name in schema["fields"]:
+            idx = _ALL_FIELD_MAP.get((resolved_type, field_key))
+            if idx is not None:
+                value = bndl.get(field_key)
+                outputs[idx] = value
+                # Build a human-readable summary for show_used_values
+                if comfy_type == "INT":
+                    used_values_text.append(f"{display_name}: {value}")
+                elif value is not None:
+                    used_values_text.append(f"{display_name}: present")
+
+        # Append the sync string (the resolved label) as the last output
+        sync_label = schema["label"]
+        return {"ui": {"used_values": used_values_text}, "result": tuple(outputs) + (sync_label,)}
+
+
+class ShimaPanel_ReBNDLer:
+    """
+    Packs individual values into a BNDL dictionary.
+    The user selects the target BNDL type from a dropdown, which
+    determines which inputs are required.
+
+    Note: Because ComfyUI input types are static, all possible inputs
+    are declared as optional. The node validates that the correct set
+    of inputs is provided based on the selected type.
+    """
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {
-            "shimasampler.bndl": ("BNDL",),
-        }}
-    RETURN_TYPES = ("IMAGE", "LATENT", "INT")
-    RETURN_NAMES = ("Image", "Latent", "S33d Used")
-    FUNCTION = "execute"
-    CATEGORY = "Shima/Pipes"
+        type_choices = [s["label"] for s in BNDL_REGISTRY.values()]
 
-    def execute(self, shimasampler_bndl):
-        if shimasampler_bndl.get("bndl_type") != "shimasampler":
-            raise ValueError("[Shima DeBNDLer] Invalid BNDL type. Expected 'shimasampler.bndl'.")
-        return (
-            shimasampler_bndl.get("image"),
-            shimasampler_bndl.get("latent"),
-            shimasampler_bndl.get("s33d_used", 0)
-        )
+        # Declare all possible inputs as optional
+        optional = {}
+        for bndl_type, schema in BNDL_REGISTRY.items():
+            for field_key, comfy_type, display_name in schema["fields"]:
+                input_name = f"{field_key}"
+                if input_name not in optional:
+                    optional[input_name] = (comfy_type, {"tooltip": f"For {schema['label']}: {display_name}"})
+
+        return {
+            "required": {
+                "bndl_type": (type_choices, {"default": type_choices[0], "tooltip": "Select the BNDL type to build"}),
+                "allow_external_linking": ("BOOLEAN", {"default": False}),
+            },
+            "optional": {
+                **optional,
+                "sync": ("BNDL_SYNC", {"tooltip": "Connect from a DeBNDLer sync output to auto-match types"}),
+            },
+        }
+
+    RETURN_TYPES = ("BNDL",)
+    RETURN_NAMES = ("bndl",)
+    FUNCTION = "execute"
+    CATEGORY = "Shima/Routing"
+    OUTPUT_NODE = True
+
+    def execute(self, bndl_type, allow_external_linking=False, sync=None, **kwargs):
+        # If sync is connected, it overrides the dropdown
+        if sync and isinstance(sync, str):
+            bndl_type = sync
+        # Resolve label to registry key
+        resolved_key = None
+        for key, schema in BNDL_REGISTRY.items():
+            if schema["label"] == bndl_type:
+                resolved_key = key
+                break
+
+        if not resolved_key or resolved_key not in BNDL_REGISTRY:
+            raise ValueError(f"[Shima ReBNDLer] Unknown BNDL type: '{bndl_type}'")
+
+        schema = BNDL_REGISTRY[resolved_key]
+
+        # Build the BNDL dictionary
+        bndl = {"bndl_type": resolved_key}
+        used_values_text = [f"Type: {schema['label']}"]
+
+        for field_key, comfy_type, display_name in schema["fields"]:
+            value = kwargs.get(field_key)
+            bndl[field_key] = value
+            if value is not None:
+                if comfy_type == "INT":
+                    used_values_text.append(f"{display_name}: {value}")
+                else:
+                    used_values_text.append(f"{display_name}: set")
+            else:
+                used_values_text.append(f"{display_name}: missing")
+
+        return {"ui": {"used_values": used_values_text}, "result": (bndl,)}
+
+
 
 NODE_CLASS_MAPPINGS = {
     "Shima.StringConcat": ShimaStringConcat,
@@ -1170,9 +1279,8 @@ NODE_CLASS_MAPPINGS = {
     "Shima.Packer_ModelCitizen": ShimaPacker_ModelCitizen,
     "Shima.Packer_LatentMaker": ShimaPacker_LatentMaker,
     "Shima.Packer_MasterPrompt": ShimaPacker_MasterPrompt,
-    "Shima.Unpacker_ShimaSampler": ShimaUnpacker_ShimaSampler,
-    "Shima.PanelDeBNDLer": ShimaPanel_DeBNDLer,
-    "Shima.PanelReBNDLer": ShimaPanel_ReBNDLer,
+    "Shima.DeBNDLer": ShimaPanel_DeBNDLer,
+    "Shima.ReBNDLer": ShimaPanel_ReBNDLer,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -1199,10 +1307,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Shima.DemuxList": "Shima Demux List",
     "Shima.Custodian": "Shima Custodian",
     "Shima.ControlPanel": "Shima Control Panel",
-    "Shima.Packer_ModelCitizen": "📦 ReBNDLer (Model Citizen)",
-    "Shima.Packer_LatentMaker": "📦 ReBNDLer (Latent Maker)",
-    "Shima.Packer_MasterPrompt": "📦 ReBNDLer (Master Prompt)",
-    "Shima.Unpacker_ShimaSampler": "📦 DeBNDLer (Shima Sampler)",
-    "Shima.PanelDeBNDLer": "Shima Panel DeBNDLer (Internal)",
-    "Shima.PanelReBNDLer": "Shima Panel ReBNDLer (Internal)"
+    "Shima.Packer_ModelCitizen": "Shima ReBNDLer (Model Citizen)",
+    "Shima.Packer_LatentMaker": "Shima ReBNDLer (Latent Maker)",
+    "Shima.Packer_MasterPrompt": "Shima ReBNDLer (Master Prompt)",
+    "Shima.DeBNDLer": "Shima DeBNDLer",
+    "Shima.ReBNDLer": "Shima ReBNDLer"
 }
