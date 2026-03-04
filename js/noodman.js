@@ -74,19 +74,28 @@ function parseFrameSequence(seqStr, columns) {
     for (const segment of segments) {
         let body = segment;
         let repeats = 1;
+        let pingPong = false;
 
-        // Check for ** (stop) — must check before *N
+        // Parse modifiers from the end, in order: ** (stop), *< (ping-pong), *N (repeat)
+        // Example combos: A1-A10*3*<**  |  A1-A10*<  |  A1-A10*3*<  |  A1-A10**
+
+        // 1. Check for ** (stop) — must check first
         if (body.endsWith("**")) {
             stopAtEnd = true;
             body = body.slice(0, -2);
-            repeats = 1;
-        } else {
-            // Check for *N (repeat)
-            const repeatMatch = body.match(/^(.+)\*(\d+)$/);
-            if (repeatMatch) {
-                body = repeatMatch[1];
-                repeats = Math.max(1, parseInt(repeatMatch[2]));
-            }
+        }
+
+        // 2. Check for *< (ping-pong)
+        if (body.endsWith("*<")) {
+            pingPong = true;
+            body = body.slice(0, -2);
+        }
+
+        // 3. Check for *N (repeat count)
+        const repeatMatch = body.match(/^(.+)\*(\d+)$/);
+        if (repeatMatch) {
+            body = repeatMatch[1];
+            repeats = Math.max(1, parseInt(repeatMatch[2]));
         }
 
         // Parse the body into frames
@@ -99,6 +108,12 @@ function parseFrameSequence(seqStr, columns) {
         } else {
             const coord = parseCoord(body);
             if (coord) segFrames = [coord];
+        }
+
+        // Apply ping-pong: append reversed frames (minus endpoints to avoid doubles)
+        if (pingPong && segFrames.length > 2) {
+            const reversed = segFrames.slice(1, -1).reverse();
+            segFrames = [...segFrames, ...reversed];
         }
 
         // Repeat the segment
@@ -419,7 +434,7 @@ function showNoodmanModal(node) {
     gridRow.appendChild(gridContainer);
 
     // Animation Sequences
-    const animHint = "A1,A2 (specific) | A1-A10 (range) | *3 (repeat 3×) | ** (play once & stop)";
+    const animHint = "A1,A2 (specific) | A1-A10 (range) | *3 (repeat 3×) | *< (ping-pong) | ** (stop)";
 
     const idleRow = createRow("Idle Animation (Off State)", animHint);
     const idleField = createTextInput("anim_idle", "A1");
