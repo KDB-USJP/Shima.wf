@@ -10,8 +10,6 @@ class ShimaPhotoRemix:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "positive": ("CONDITIONING",),
-                "negative": ("CONDITIONING",),
                 "image": ("IMAGE",),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
@@ -22,18 +20,32 @@ class ShimaPhotoRemix:
                 "resolution_mode": (["Source", "SDXL Buckets", "SD1.5 Buckets", "Custom"], {"default": "Source"}),
             },
             "optional": {
+                "positive": ("CONDITIONING",),
+                "negative": ("CONDITIONING",),
                 "model": ("MODEL",),
                 "vae": ("VAE",),
                 "shima.commonparams": ("DICT", {
                     "forceInput": True,
                     "tooltip": "Configuration bundle from Shima.Commons (overrides settings)"
                 }),
-                "modelbundle": ("SHIMA_MODEL_BUNDLE", {
+                "modelcitizen.bndl": ("BNDL", {
                     "forceInput": True,
-                    "tooltip": "Bundle containing Model and VAE (overrides individual inputs)"
+                    "tooltip": "Bundle containing Model, CLIP, and VAE (overrides individual inputs)"
+                }),
+                "masterprompt.bndl": ("BNDL", {
+                    "forceInput": True,
+                    "tooltip": "Bundle containing Positive and Negative conditioning (overrides individual inputs)"
                 }),
                 "bucket_width": ("INT", {"default": 1024, "min": 64, "max": 8192, "step": 8}), 
-                "bucket_height": ("INT", {"default": 1024, "min": 64, "max": 8192, "step": 8}), 
+                "bucket_height": ("INT", {"default": 1024, "min": 64, "max": 8192, "step": 8}),
+                "allow_external_linking": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "If ON, this node broadcasts/receives OUTSIDE the Island (ignores group regex)"
+                }),
+                "show_used_values": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Show actual values being used (debug)"
+                }),
             },
             "hidden": {
             }
@@ -43,27 +55,33 @@ class ShimaPhotoRemix:
     FUNCTION = "remix"
     CATEGORY = "Shima/Image"
 
-    def remix(self, positive, negative, image, seed, steps, cfg, sampler_name, scheduler, denoise, resolution_mode, model=None, vae=None, bucket_width=1024, bucket_height=1024, **kwargs):
-        # Handle dot notation input
+    def remix(self, image, seed, steps, cfg, sampler_name, scheduler, denoise, resolution_mode, positive=None, negative=None, model=None, vae=None, bucket_width=1024, bucket_height=1024, **kwargs):
+        # Handle dot notation / BNDL inputs
         shima_commonparams = kwargs.get("shima.commonparams", None)
-        modelbundle = kwargs.get("modelbundle", None)
+        modelcitizen = kwargs.get("modelcitizen") or kwargs.get("modelcitizen.bndl")
+        masterprompt = kwargs.get("masterprompt") or kwargs.get("masterprompt.bndl")
         
-        # Priority Logic: Explicit Input > Model Bundle
-        # If explicit model/vae is provided, use it.
-        # Else if modelbundle is provided, use that.
-        # Else raise error.
-        
-        if model is None and modelbundle:
-            model = modelbundle.get("model")
+        # Priority Logic: Explicit Input > BNDL > Error
+        if model is None and modelcitizen:
+            model = modelcitizen.get("model")
             
-        if vae is None and modelbundle:
-            vae = modelbundle.get("vae")
+        if vae is None and modelcitizen:
+            vae = modelcitizen.get("vae")
+            
+        if masterprompt:
+            if positive is None and masterprompt.get("pos") is not None:
+                positive = masterprompt.get("pos")
+            if negative is None and masterprompt.get("neg") is not None:
+                negative = masterprompt.get("neg")
             
         if model is None:
-            raise ValueError("[Shima PhotoRemix] No Model provided! Please connect 'model' input or 'modelbundle'.")
+            raise ValueError("[Shima PhotoRemix] No Model provided! Please connect 'model' input or a 'modelcitizen.bndl'.")
             
         if vae is None:
-             raise ValueError("[Shima PhotoRemix] No VAE provided! Please connect 'vae' input or 'modelbundle'.")
+             raise ValueError("[Shima PhotoRemix] No VAE provided! Please connect 'vae' input or a 'modelcitizen.bndl'.")
+             
+        if positive is None or negative is None:
+            raise ValueError("[Shima PhotoRemix] No Conditioning provided! Please connect positive/negative prompts or a 'masterprompt.bndl'.")
 
         # 1. Resolution Handling
         # ----------------------

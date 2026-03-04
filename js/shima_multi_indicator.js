@@ -2,7 +2,8 @@ import { app } from "../../scripts/app.js";
 
 /**
  * Shima Multi-State Indicator - Frontend Extension
- * 3-State status indicator with real-time hardware sync.
+ * 3-State status indicator with rounded-square housing.
+ * Supports 6 trigger modes with configurable evaluation values.
  */
 
 function adjustColor(hex, factor) {
@@ -60,6 +61,12 @@ app.registerExtension({
                         i.pos = [0, h / 2];
                     });
                 }
+                if (node.outputs) {
+                    node.outputs.forEach(o => {
+                        o.label = " ";
+                        o.pos = [w, h / 2];
+                    });
+                }
             };
             cleanupUI();
             setTimeout(cleanupUI, 50);
@@ -86,8 +93,8 @@ app.registerExtension({
                 const cy = h / 2;
                 const scale = this.widgets?.find(w => w.name === "scale")?.value || 1.0;
 
-                // Base radius relative to 60x60 size
                 const baseRad = (30 * 0.7) * scale;
+                const cornerRadius = baseRad * 0.3;
                 const color1 = this.widgets?.find(w => w.name === "color_1")?.value || "#00ff00";
                 const color2 = this.widgets?.find(w => w.name === "color_2")?.value || "#ff0000";
                 const colorOff = this.widgets?.find(w => w.name === "color_off")?.value || "#222222";
@@ -97,20 +104,18 @@ app.registerExtension({
 
                 // --- Hardware Sync (Real-time Link Traversal) ---
                 if (triggerType === "Hardware Sync") {
-                    isLitState = 0; // Default off
+                    isLitState = 0;
                     if (this.inputs?.[0]?.link) {
                         const link = app.graph.links[this.inputs[0].link];
                         if (link) {
                             const sourceNode = app.graph.getNodeById(link.origin_id);
                             if (sourceNode) {
-                                // 1. Check if it's a Shima Switch
                                 const sw = sourceNode.widgets?.find(w => w.name === "switch_state" || w.name === "breaker_state");
                                 if (sw !== undefined) {
-                                    isLitState = (sw.value === 0) ? 1 : 2; // ON = State 1, OFF = State 2
+                                    isLitState = (sw.value === 0) ? 1 : 2;
                                 } else {
-                                    // 2. Check standard ComfyUI Mode
-                                    if (sourceNode.mode === 0) isLitState = 1; // Always
-                                    else if (sourceNode.mode === 2 || sourceNode.mode === 4) isLitState = 0; // Never/Bypass -> Off
+                                    if (sourceNode.mode === 0) isLitState = 1;
+                                    else if (sourceNode.mode === 2 || sourceNode.mode === 4) isLitState = 0;
                                 }
                             }
                         }
@@ -119,11 +124,30 @@ app.registerExtension({
 
                 ctx.save();
 
-                // 1. Housing (Industrial Ring)
-                ctx.beginPath();
-                ctx.arc(cx, cy, baseRad * 1.15, 0, Math.PI * 2);
-                const ringGrad = ctx.createLinearGradient(cx - baseRad, cy - baseRad, cx + baseRad, cy + baseRad);
-                ringGrad.addColorStop(0, "#666"); // Lighter housing for multi-state
+                // Helper: draw rounded rectangle path
+                const drawRoundedRect = (x, y, rw, rh, cr) => {
+                    ctx.beginPath();
+                    ctx.moveTo(x + cr, y);
+                    ctx.lineTo(x + rw - cr, y);
+                    ctx.quadraticCurveTo(x + rw, y, x + rw, y + cr);
+                    ctx.lineTo(x + rw, y + rh - cr);
+                    ctx.quadraticCurveTo(x + rw, y + rh, x + rw - cr, y + rh);
+                    ctx.lineTo(x + cr, y + rh);
+                    ctx.quadraticCurveTo(x, y + rh, x, y + rh - cr);
+                    ctx.lineTo(x, y + cr);
+                    ctx.quadraticCurveTo(x, y, x + cr, y);
+                    ctx.closePath();
+                };
+
+                // 1. Housing (Industrial Ring) — rounded square
+                const housingSize = baseRad * 2.3;
+                const hx = cx - housingSize / 2;
+                const hy = cy - housingSize / 2;
+                const housingCorner = cornerRadius * 1.5;
+
+                drawRoundedRect(hx, hy, housingSize, housingSize, housingCorner);
+                const ringGrad = ctx.createLinearGradient(hx, hy, hx + housingSize, hy + housingSize);
+                ringGrad.addColorStop(0, "#666");
                 ringGrad.addColorStop(1, "#222");
                 ctx.fillStyle = ringGrad;
                 ctx.fill();
@@ -131,16 +155,19 @@ app.registerExtension({
                 ctx.lineWidth = 1;
                 ctx.stroke();
 
-                // 2. The Bulb
-                ctx.beginPath();
-                ctx.arc(cx, cy, baseRad, 0, Math.PI * 2);
+                // 2. The Lens — rounded square
+                const lensSize = baseRad * 2;
+                const lx = cx - lensSize / 2;
+                const ly = cy - lensSize / 2;
 
                 let activeColor = colorOff;
                 if (isLitState === 1) activeColor = color1;
                 else if (isLitState === 2) activeColor = color2;
 
+                drawRoundedRect(lx, ly, lensSize, lensSize, cornerRadius);
+
                 if (isLitState > 0) {
-                    const glowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRad);
+                    const glowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, lensSize * 0.7);
                     glowGrad.addColorStop(0, "#fff");
                     glowGrad.addColorStop(0.2, adjustColor(activeColor, 1.3));
                     glowGrad.addColorStop(0.8, activeColor);
@@ -149,7 +176,7 @@ app.registerExtension({
                     ctx.shadowBlur = 25 * scale;
                     ctx.shadowColor = activeColor;
                 } else {
-                    const darkGrad = ctx.createRadialGradient(cx, cy - baseRad * 0.2, 0, cx, cy, baseRad);
+                    const darkGrad = ctx.createRadialGradient(cx, cy - lensSize * 0.1, 0, cx, cy, lensSize * 0.7);
                     darkGrad.addColorStop(0, adjustColor(activeColor, 1.2));
                     darkGrad.addColorStop(1, activeColor);
                     ctx.fillStyle = darkGrad;
@@ -157,15 +184,19 @@ app.registerExtension({
                 }
                 ctx.fill();
 
+                // Specular highlight (top-left)
                 if (isLitState === 0) {
+                    const hlSize = lensSize * 0.15;
+                    const hlX = lx + lensSize * 0.2;
+                    const hlY = ly + lensSize * 0.2;
                     ctx.beginPath();
-                    ctx.arc(cx - baseRad * 0.3, cy - baseRad * 0.3, baseRad * 0.15, 0, Math.PI * 2);
+                    ctx.arc(hlX, hlY, hlSize, 0, Math.PI * 2);
                     ctx.fillStyle = "rgba(255,255,255,0.1)";
                     ctx.fill();
                 }
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, baseRad * 0.85, 0, Math.PI * 2);
+                // Inner bevel
+                drawRoundedRect(lx + lensSize * 0.08, ly + lensSize * 0.08, lensSize * 0.84, lensSize * 0.84, cornerRadius * 0.7);
                 ctx.strokeStyle = (isLitState > 0) ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.4)";
                 ctx.lineWidth = 1;
                 ctx.stroke();
@@ -196,7 +227,7 @@ function showMultiLightModal(node) {
         position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
         background: #111; color: #eee; padding: 30px; border-radius: 12px;
         z-index: 10001; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-        border: 1px solid #333; min-width: 350px; font-family: sans-serif;
+        border: 1px solid #333; min-width: 380px; font-family: sans-serif;
     `;
 
     panel.innerHTML = `<h2 style='margin-top:0'>Multi-State Indicator Config</h2>`;
@@ -246,7 +277,8 @@ function showMultiLightModal(node) {
     const tSel = document.createElement("select");
     tSel.style.cssText = "width:100%; padding:10px; background:#222; color:white; border: 1px solid #444;";
     const triggerW = node.widgets?.find(w => w.name === "trigger_type");
-    ["Hardware Sync", "Number Match"].forEach(t => {
+    const allModes = ["Hardware Sync", "Number Match", "Math", "String", "Regex", "Boolean"];
+    allModes.forEach(t => {
         const opt = document.createElement("option");
         opt.value = t; opt.innerText = t;
         if (t === triggerW?.value) opt.selected = true;
@@ -254,6 +286,77 @@ function showMultiLightModal(node) {
     });
     tRow.appendChild(tSel);
 
+    // State Value Fields
+    const valContainer = document.createElement("div");
+    valContainer.style.marginTop = "15px";
+    panel.appendChild(valContainer);
+
+    const state1W = node.widgets?.find(w => w.name === "state_1_value");
+    const state2W = node.widgets?.find(w => w.name === "state_2_value");
+
+    const placeholders = {
+        "Number Match": ["1.0", "2.0"],
+        "Math": [">1.0", ">2.0"],
+        "String": ["hello", "goodbye"],
+        "Regex": ["^error", "^warn"],
+    };
+
+    let val1Input, val2Input;
+
+    const updateValueFields = () => {
+        valContainer.innerHTML = "";
+        const mode = tSel.value;
+
+        // No value fields for Hardware Sync or Boolean
+        if (mode === "Hardware Sync" || mode === "Boolean") return;
+
+        const ph = placeholders[mode] || ["", ""];
+
+        const v1Row = document.createElement("div");
+        v1Row.style.marginBottom = "15px";
+        const v1Label = document.createElement("b");
+        v1Label.style.cssText = "font-size:12px; color:#aaa; display:block; margin-bottom:5px;";
+        v1Label.innerText = "State 1 Value";
+        v1Row.appendChild(v1Label);
+        val1Input = document.createElement("input"); val1Input.type = "text";
+        val1Input.placeholder = ph[0];
+        val1Input.value = state1W?.value || "";
+        val1Input.style.cssText = "width:100%; padding:10px; background:#222; color:white; border: 1px solid #444; box-sizing:border-box;";
+        v1Row.appendChild(val1Input);
+        valContainer.appendChild(v1Row);
+
+        const v2Row = document.createElement("div");
+        v2Row.style.marginBottom = "15px";
+        const v2Label = document.createElement("b");
+        v2Label.style.cssText = "font-size:12px; color:#aaa; display:block; margin-bottom:5px;";
+        v2Label.innerText = "State 2 Value";
+        v2Row.appendChild(v2Label);
+        val2Input = document.createElement("input"); val2Input.type = "text";
+        val2Input.placeholder = ph[1];
+        val2Input.value = state2W?.value || "";
+        val2Input.style.cssText = "width:100%; padding:10px; background:#222; color:white; border: 1px solid #444; box-sizing:border-box;";
+        v2Row.appendChild(val2Input);
+        valContainer.appendChild(v2Row);
+
+        // Mode hint
+        const hintMap = {
+            "Number Match": "Exact numeric equality check.",
+            "Math": "Comparison: >, <, >=, <=, ==, != followed by a number.",
+            "String": "Exact string match against the input.",
+            "Regex": "Regular expression pattern match (re.search).",
+        };
+        if (hintMap[mode]) {
+            const hint = document.createElement("div");
+            hint.style.cssText = "font-size:11px; color:#666; font-style:italic; margin-top:-5px;";
+            hint.innerText = hintMap[mode];
+            valContainer.appendChild(hint);
+        }
+    };
+
+    tSel.addEventListener("change", updateValueFields);
+    updateValueFields();
+
+    // Footer
     const footer = document.createElement("div");
     footer.style.cssText = "display:flex; justify-content:flex-end; gap:10px; margin-top:30px;";
 
@@ -270,7 +373,12 @@ function showMultiLightModal(node) {
             scaleW.value = sc;
             node.size = [60 * sc, 60 * sc];
             if (node.inputs) node.inputs.forEach(i => i.pos = [0, node.size[1] / 2]);
+            if (node.outputs) node.outputs.forEach(o => o.pos = [node.size[0], node.size[1] / 2]);
         }
+        // Save state values
+        if (val1Input && state1W) state1W.value = val1Input.value;
+        if (val2Input && state2W) state2W.value = val2Input.value;
+
         node.setDirtyCanvas(true);
         cleanup();
     };

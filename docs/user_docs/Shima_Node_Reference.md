@@ -169,13 +169,21 @@ Applies transformations to a batch of images sequentially.
 
 ### Photo Remix
 
-Creative image remixing with style transfer capabilities.
+Creative image remixing with style transfer capabilities. Accepts model and conditioning via individual inputs or via `modelcitizen.bndl` and `masterprompt.bndl` bundles (BNDL inputs override individual wires).
 
 | Direction | Name | Type | Description |
 |-----------|------|------|--------------|
 | Input | `image` | IMAGE | Source image |
-| Input | `model` | MODEL | Model for processing |
+| Input | `positive` | CONDITIONING | Positive conditioning (optional if using masterprompt.bndl) |
+| Input | `negative` | CONDITIONING | Negative conditioning (optional if using masterprompt.bndl) |
+| Input | `model` | MODEL | Diffusion model (optional if using modelcitizen.bndl) |
+| Input | `vae` | VAE | VAE decoder (optional if using modelcitizen.bndl) |
+| Input | `modelcitizen.bndl` | BNDL | Model Citizen bundle (auto-extracts model + vae) |
+| Input | `masterprompt.bndl` | BNDL | Master Prompt bundle (auto-extracts pos + neg conditioning) |
+| Widget | `resolution_mode` | COMBO | Source, SDXL Buckets, SD1.5 Buckets, or Custom |
+| Widget | `denoise` | FLOAT | Denoising strength (default 0.60) |
 | Output | `IMAGE` | IMAGE | Remixed image |
+| Output | `LATENT` | LATENT | Sampled latent |
 
 ### Brightness/Contrast
 
@@ -582,11 +590,20 @@ Interactive, visually-rich control room elements:
 
 **Pilot Light** — Single LED indicator that reacts to input signals (Boolean, String, Math, or Tensor triggers). Scales proportionally and supports neutral-colored link ports.
 
-**Multi-State Indicator** — Three-state control room indicator: Off, State 1, State 2, each with configurable colors. 
+**Multi-State Indicator** — Three-state control room indicator rendered as a rounded-corner square (distinct from the circular Pilot Light). Supports 6 trigger modes configured via double-click modal:
+
+- **Hardware Sync** — reads switch/bypass state from connected node in real-time
+- **Number Match** — exact numeric equality (`input == State 1 Value` → green, `input == State 2 Value` → red)
+- **Math** — comparison expressions using `>`, `<`, `>=`, `<=`, `==`, `!=` (e.g., `>1.0` → State 1, `>2.0` → State 2)
+- **String** — exact string match
+- **Regex** — regex pattern match (`re.search`)
+- **Boolean** — truthy input → State 1 (green), falsy → State 2 (red)
+
+Passes the input value through to a `value` output for downstream use. Colors for each state are configurable in the modal.
 
 **RGB Logic Array** — Three-channel (R, G, B) logic evaluator with additive color blending on a rendered lens. Supports Boolean, Number, Hardware Sync, and String Eval modes. Draws mode designators (TF, >0, HS, SE) on the lens.
 
-**Dymo Label** — Embossed text label with colored tape. Renders "Always on Top" with custom font support.
+**Dymo Label** — Embossed text label with colored tape. Renders "Always on Top" with custom font support and optional "jitter" for the angle of the tape.
 
 ### Interactive Hardware Controls
 

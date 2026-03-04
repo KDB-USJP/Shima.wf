@@ -530,35 +530,127 @@ class ShimaDymoLabel:
 class ShimaMultiStateIndicator:
     """
     3-State control room indicator (Off, State 1, State 2).
+    Supports 6 trigger modes: Hardware Sync, Number Match, Math, String, Regex, Boolean.
+    Outputs a pass-through of the input value.
     """
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "any_input": (ANY, {}),
-                "color_1": ("STRING", {"default": "#00ff00"}), # Green
-                "color_2": ("STRING", {"default": "#ff0000"}), # Red
-                "color_off": ("STRING", {"default": "#222222"}), # Dark
-                "trigger_type": (["Hardware Sync", "Number Match"], {"default": "Hardware Sync"}),
-                "state_1_value": ("FLOAT", {"default": 1.0}),
-                "state_2_value": ("FLOAT", {"default": 0.0}),
+                "color_1": ("STRING", {"default": "#00ff00"}),  # Green
+                "color_2": ("STRING", {"default": "#ff0000"}),  # Red
+                "color_off": ("STRING", {"default": "#222222"}),  # Dark
+                "trigger_type": (["Hardware Sync", "Number Match", "Math", "String", "Regex", "Boolean"], {"default": "Hardware Sync"}),
+                "state_1_value": ("STRING", {"default": "1.0"}),
+                "state_2_value": ("STRING", {"default": "0.0"}),
                 "scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1}),
             },
         }
-    RETURN_TYPES = ()
+    RETURN_TYPES = (ANY,)
+    RETURN_NAMES = ("value",)
     FUNCTION = "execute"
     CATEGORY = "Shima/System"
+    OUTPUT_NODE = True
+
+    def _eval_math(self, val, expression):
+        """Evaluate a math comparison expression like '>1.0', '<=2.5', '!=0'."""
+        expression = expression.strip()
+        if not expression:
+            return False
+        # Parse operator and threshold
+        for op in [">=", "<=", "!=", "==", ">", "<"]:
+            if expression.startswith(op):
+                try:
+                    threshold = float(expression[len(op):].strip())
+                    if op == ">": return val > threshold
+                    elif op == "<": return val < threshold
+                    elif op == ">=": return val >= threshold
+                    elif op == "<=": return val <= threshold
+                    elif op == "==": return val == threshold
+                    elif op == "!=": return val != threshold
+                except ValueError:
+                    return False
+        # Bare number = exact match
+        try:
+            return val == float(expression)
+        except ValueError:
+            return False
 
     def execute(self, any_input, color_1, color_2, color_off, trigger_type, state_1_value, state_2_value, scale=1.0):
         state = 0
+        pass_value = any_input
+
         if trigger_type == "Number Match":
             try:
                 val = float(any_input)
-                if val == float(state_1_value): state = 1
-                elif val == float(state_2_value): state = 2
-            except:
+                try:
+                    if val == float(state_2_value):
+                        state = 2
+                except ValueError:
+                    pass
+                if state == 0:
+                    try:
+                        if val == float(state_1_value):
+                            state = 1
+                    except ValueError:
+                        pass
+            except (ValueError, TypeError):
                 state = 0
-        return {"ui": {"state": [state]}, "result": ()}
+
+        elif trigger_type == "Math":
+            try:
+                val = float(any_input)
+                # Check State 2 first (typically higher threshold)
+                if self._eval_math(val, state_2_value):
+                    state = 2
+                elif self._eval_math(val, state_1_value):
+                    state = 1
+            except (ValueError, TypeError):
+                state = 0
+
+        elif trigger_type == "String":
+            input_str = str(any_input) if any_input is not None else ""
+            if input_str == state_2_value:
+                state = 2
+            elif input_str == state_1_value:
+                state = 1
+
+        elif trigger_type == "Regex":
+            input_str = str(any_input) if any_input is not None else ""
+            try:
+                if state_2_value and re.search(state_2_value, input_str):
+                    state = 2
+                elif state_1_value and re.search(state_1_value, input_str):
+                    state = 1
+            except re.error:
+                state = 0
+
+        elif trigger_type == "Boolean":
+            if isinstance(any_input, bool):
+                state = 1 if any_input else 2
+            elif isinstance(any_input, (int, float)):
+                if any_input == 1:
+                    state = 1
+                elif any_input == 0:
+                    state = 2
+                else:
+                    state = 0  # Non-boolean number → Off
+            elif isinstance(any_input, str):
+                low = any_input.strip().lower()
+                if low in ("true", "1", "t", "y", "yes"):
+                    state = 1
+                elif low in ("false", "0", "f", "n", "no"):
+                    state = 2
+                else:
+                    state = 0  # Non-boolean string → Off
+            else:
+                state = 0
+
+        # Hardware Sync is handled entirely in JS (reads link state in real-time)
+        # Python just passes through
+
+        return {"ui": {"state": [state]}, "result": (pass_value,)}
 
 class ShimaRGBIndicator:
     """
