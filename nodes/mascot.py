@@ -112,7 +112,10 @@ class ShimaNoodmanSticker:
         state = 0
         pass_value = any_input
 
-        if any_input is not None:
+        if any_input is None:
+            # No input connected — default to State 1
+            state = 1
+        elif any_input is not None:
             if trigger_type == "Number Match":
                 try:
                     val = float(any_input)
