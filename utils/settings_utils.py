@@ -23,7 +23,8 @@ class ShimaSettings:
             "sdxl", "sd1.5", "sd2.x", "sd3",
             "flux", "pony", "illustrious",
             "auraflow", "hunyuan",
-            "lumina2", "chroma", "hidream"
+            "lumina2", "chroma", "hidream",
+            "z-image-base", "z-image-turbo"
         ],
         "aspect_ratios": ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "Custom"],
         "orientations": ["landscape", "portrait", "auto"]

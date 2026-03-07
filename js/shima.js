@@ -994,16 +994,59 @@ function setupLatentMakerWidgets(node) {
  */
 function setupSamplerWidgets(node) {
     // Add toolbar (both toggles + show_values)
-    addShimaToolbar(node, ["commonparams", "external_linking", "show_values"]);
+    addShimaToolbar(node, ["commonparams", "samplercommons", "external_linking", "show_values"]);
     hideToolbarWidgets(node);
 
     // Set up used values display
     setupUsedValuesDisplay(node, "Shima.Sampler");
 
     // Preserve critical widget values during serialization
-    preserveWidgetValues(node, ["use_commonparams", "allow_external_linking", "show_used_values", "vae_decode"]);
+    preserveWidgetValues(node, ["use_commonparams", "use_samplercommons", "allow_external_linking", "show_used_values", "vae_decode"]);
 
     // Removed port visual overrides
+}
+
+/**
+ * Shima.SamplerCommons - Toolbar setup + model_type preset sync
+ * @param {LGraphNode} node - The SamplerCommons node
+ */
+function setupSamplerCommonsWidgets(node) {
+    addShimaToolbar(node, ["commonparams", "external_linking", "show_values"]);
+    hideToolbarWidgets(node);
+    setupUsedValuesDisplay(node, "Shima.SamplerCommons");
+    preserveWidgetValues(node, ["use_commonparams", "allow_external_linking", "show_used_values"]);
+
+    // Track last model_type for change detection
+    node._lastModelType = "";
+
+    // When execution completes, check if model_type changed and apply preset
+    const origOnExecuted = node.onExecuted;
+    node.onExecuted = function (data) {
+        if (origOnExecuted) origOnExecuted.call(this, data);
+
+        const newModelType = data?.model_type?.[0];
+        const presetJson = data?.preset?.[0];
+
+        if (newModelType && presetJson && newModelType !== this._lastModelType) {
+            // Model type changed — update widgets to recommended preset
+            try {
+                const preset = JSON.parse(presetJson);
+                const WIDGET_KEYS = ["steps", "cfg", "sampler_name", "scheduler", "denoise"];
+                for (const key of WIDGET_KEYS) {
+                    const w = this.widgets?.find(w => w.name === key);
+                    if (w && preset[key] !== undefined) {
+                        w.value = preset[key];
+                        if (w.callback) w.callback(preset[key]);
+                    }
+                }
+                console.log(`[SamplerCommons] Preset applied for ${newModelType}:`, preset);
+                this.setDirtyCanvas(true, true);
+            } catch (e) {
+                console.error("[SamplerCommons] Failed to parse preset:", e);
+            }
+        }
+        this._lastModelType = newModelType || "";
+    };
 }
 
 /**
@@ -3259,6 +3302,8 @@ app.registerExtension({
                 setupStylerWidgets(this);
             } else if (nodeData.name === "Shima.PreviewCompare") {
                 setupShimaCompareWidgets(this);
+            } else if (nodeData.name === "Shima.SamplerCommons") {
+                setupSamplerCommonsWidgets(this);
             }
         };
     },

@@ -163,6 +163,7 @@ class ShimaCommons:
             # Map lowercase input to Standard Key expected by Latent Maker
             # Commons Inputs: ["sdxl", "sd1.5", "sd3", "flux"...]
             # LatentMaker Bases: {"SD 1.5":..., "SDXL":..., "SD3":..., "Flux":...}
+            "model_type_raw": model_type,  # Original user-facing model type (for SamplerCommons presets)
             "model_type": {
                 "sdxl": "sdxl",
                 "sd1.5": "sd1.5",
@@ -176,6 +177,8 @@ class ShimaCommons:
                 "lumina2": "flux",   # Uses Flux-VAE-16CH
                 "chroma": "flux",    # Flux variant
                 "hidream": "sd3",    # SD3-like pipeline
+                "z-image-base": "flux",   # S3-DiT, 16ch latents
+                "z-image-turbo": "flux",  # S3-DiT distilled, 16ch latents
             }.get(model_type, "sdxl"),
             "aspect_ratio": aspect_ratio,
             "orientation": orientation

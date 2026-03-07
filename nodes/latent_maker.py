@@ -52,6 +52,7 @@ class ShimaLatentMaker:
         "sdxl": "sdxl", "pony": "sdxl", "illustrious": "sdxl",
         "sd3": "sd3", "hidream": "sd3",
         "flux": "flux", "chroma": "flux", "lumina2": "flux",
+        "z-image-base": "flux", "z-image-turbo": "flux",
         "auraflow": "sdxl", "hunyuan": "sdxl",
     }
     
@@ -65,7 +66,8 @@ class ShimaLatentMaker:
                 
                 # Model type (affects latent channels)
                 "model_type": (["sdxl", "sd1.5", "sd2.x", "sd3", "flux", "pony", "illustrious",
-                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream"], {
+                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream",
+                                "z-image-base", "z-image-turbo"], {
                     "default": "sdxl",
                     "tooltip": "Select Model Type — determines latent channels and base resolution"
                 }),

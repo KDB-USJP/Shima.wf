@@ -33,6 +33,8 @@ const MODEL_CONFIGS = {
     "hidream": ["clip_l_weight", "positive_l", "negative_l",
         "clip_g_weight", "positive_g", "negative_g",
         "t5_weight", "positive_t5", "negative_t5"],
+    "z-image-base": [],  // Qwen3-4B single encoder, no CLIP sub-encoders
+    "z-image-turbo": [],  // Qwen3-4B single encoder, CFG locked at 1.0
 };
 
 const ALL_CONTROLLED_WIDGETS = [

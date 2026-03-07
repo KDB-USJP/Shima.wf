@@ -75,6 +75,15 @@ class ShimaSampler:
                     "default": False,
                     "tooltip": "Show actual values being used (debug)"
                 }),
+                # SamplerCommons Integration
+                "shima.samplercommons": ("DICT", {
+                    "forceInput": True,
+                    "tooltip": "Sampler settings bundle from Shima.SamplerCommons (overrides steps/cfg/sampler/scheduler/denoise)"
+                }),
+                "use_samplercommons": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "If True, use sampler settings from SamplerCommons bundle"
+                }),
                 "modelcitizen.bndl": ("BNDL", {
                     "forceInput": True,
                     "tooltip": "Bundle containing Model and VAE (overrides individual inputs)"
@@ -182,6 +191,19 @@ class ShimaSampler:
         elif randomize:
             final_s33d = random.randint(0, 0xffffffffffffffff)
         
+        # SamplerCommons override
+        sampler_commons = kwargs.get("shima.samplercommons")
+        use_samplercommons = kwargs.get("use_samplercommons", False)
+        sampler_source = "Widget"
+        
+        if use_samplercommons and sampler_commons:
+            steps = sampler_commons.get("steps", steps)
+            cfg = sampler_commons.get("cfg", cfg)
+            sampler_name = sampler_commons.get("sampler_name", sampler_name)
+            scheduler = sampler_commons.get("scheduler", scheduler)
+            denoise = sampler_commons.get("denoise", denoise)
+            sampler_source = f"SamplerCommons ({sampler_commons.get('model_type', 'unknown')})"
+        
         should_decode = vae_decode and (vae is not None)
         
         # Get the latent samples
@@ -258,11 +280,13 @@ class ShimaSampler:
         
         used_values_text = [
             f"Source: {source}",
+            f"Sampler: {sampler_source}",
             f"Seed: {final_s33d}",
             f"Steps: {steps}",
             f"CFG: {cfg}",
             f"Sampler: {sampler_name}",
             f"Scheduler: {scheduler}",
+            f"Denoise: {denoise}",
             f"DRM: {state}",
             model_info
         ]
@@ -315,6 +339,11 @@ class ShimaPanelSampler_Virtual:
                 "payload": ("STRING", {"default": "{}"}),
                 "use_commonparams": ("BOOLEAN", {"default": False}),
                 "allow_external_linking": ("BOOLEAN", {"default": False}),
+                "shima.samplercommons": ("DICT", {
+                    "forceInput": True,
+                    "tooltip": "Sampler settings bundle from Shima.SamplerCommons"
+                }),
+                "use_samplercommons": ("BOOLEAN", {"default": False}),
             },
             "hidden": {
                 "prompt": "PROMPT",

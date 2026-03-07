@@ -41,6 +41,8 @@ const NODE_CATEGORY_MAP = {
 
     // Samplers
     "Shima.Sampler": "samplers",
+    "Shima.SamplerCommons": "samplers",
+    "Shima.SamplerCommonsPasser": "samplers",
     "Shima.PhotoRemix": "samplers",
 
     // Latents

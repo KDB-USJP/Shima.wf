@@ -10,7 +10,8 @@ class ShimaMasterPrompt:
                 "positive": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": "Positive Prompt", "tooltip": "Main positive prompt"}),
                 "negative": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": "Negative Prompt", "tooltip": "Main negative prompt"}),
                 "model_type": (["sdxl", "sd1.5", "sd2.x", "sd3", "flux", "pony", "illustrious",
-                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream"],),
+                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream",
+                                "z-image-base", "z-image-turbo"],),
 
             },
             "optional": {

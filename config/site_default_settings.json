@@ -16,7 +16,9 @@
             "hunyuan",
             "lumina2",
             "chroma",
-            "hidream"
+            "hidream",
+            "z-image-base",
+            "z-image-turbo"
         ],
         "aspect_ratios": [
             "1:1",
