@@ -58,6 +58,8 @@ from .workflow_image import ShimaWorkflowImage
 from .model_citizen import ShimaModelCitizen, ShimaLoraStack, ShimaPanelModelCitizen
 from .photo_remix import ShimaPhotoRemix
 from .styler import ShimaStyleSelector, ShimaStyleIterator, ShimaStyleGallery
+from .control_agent import NODE_CLASS_MAPPINGS as CONTROL_AGENT_NODES
+from .control_agent import NODE_DISPLAY_NAME_MAPPINGS as CONTROL_AGENT_DISPLAY_NAMES
 from .styler_favorites import ShimaStyleFavorites
 from .hub import NODE_CLASS_MAPPINGS as HUB_NODES
 from .hub import NODE_DISPLAY_NAME_MAPPINGS as HUB_DISPLAY_NAMES
@@ -108,6 +110,7 @@ NODE_CLASS_MAPPINGS = {
     **HUB_NODES,
     **MASCOT_NODES,
     **SYSTEM_NODES,
+    **CONTROL_AGENT_NODES,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -148,6 +151,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     **HUB_DISPLAY_NAMES,
     **MASCOT_DISPLAY_NAMES,
     **SYSTEM_DISPLAY_NAMES,
+    **CONTROL_AGENT_DISPLAY_NAMES,
 }
 
 # ============================================================================

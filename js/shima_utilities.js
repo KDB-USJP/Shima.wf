@@ -66,6 +66,10 @@ const NODE_CATEGORY_MAP = {
     "Shima.Inspector": "notes",
     "Shima.Note": "notes",
 
+    // ControlNets
+    "Shima.ControlAgent": "utility",
+    "Shima.PanelControlAgent": "utility",
+
     // Utility & logic
     "Shima.SmartReroute": "utility",
     "Shima.Preview": "utility",

@@ -1,6 +1,8 @@
 import torch
 import comfy.sd
 import comfy.utils
+import folder_paths
+import os
 
 class ShimaMasterPrompt:
     @classmethod
@@ -18,6 +20,7 @@ class ShimaMasterPrompt:
                 "clip": ("CLIP",),
                 # Shima Integration (Input)
                 "shima.commonparams": ("DICT", {"forceInput": True, "tooltip": "Connect Shima.Commons bundle here"}),
+                "shima.controlbus": ("LIST", {"forceInput": True, "tooltip": "Connect ControlNet chain here"}),
 
                 "model_type_override": ("STRING", {"forceInput": True, "tooltip": "Override model_type selection"}),
                 
@@ -159,6 +162,84 @@ class ShimaMasterPrompt:
             guidance = kwargs.get("flux_guidance", 3.5)
             pos_cond = [[t[0], {**t[1], "guidance": guidance}] for t in pos_cond]
             print(f"[ShimaMasterPrompt] Applied FluxGuidance: {guidance}")
+
+        # --- SHIMA CONTROLBUS INTEGRATION ---
+        controlbus = kwargs.get("shima.controlbus", [])
+        if controlbus:
+            print(f"[ShimaMasterPrompt] Found {len(controlbus)} ControlNets on the bus. Applying...")
+            
+            # Helper to find the right model path
+            def _resolve_controlnet(architecture, c_type):
+                cnet_paths = folder_paths.get_filename_list("controlnet")
+                architecture_clean = architecture.replace(".", "").lower() # e.g. "sd1.5" -> "sd15"
+                c_type = c_type.lower()
+                
+                # 1. Very strict matching: Architecture specific folder
+                for path in cnet_paths:
+                     path_clean = path.lower().replace("\\", "/") # Normalize path separators
+                     if f"/{architecture_clean}/" in f"/{path_clean}" and c_type in path_clean:
+                         return path
+                         
+                # 2. Lazy Matching: Both terms exist in the filename anywhere
+                for path in cnet_paths:
+                    path_clean = path.lower().replace("\\", "/").split("/")[-1]
+                    # Map common naming shorthands
+                    aliases = [architecture_clean]
+                    if architecture_clean == "sdxl": aliases.extend(["xl"])
+                    if architecture_clean == "sd15": aliases.extend(["v15", "15"])
+                    if architecture_clean == "sd3": aliases.extend(["sd3"])
+                    
+                    if any(alias in path_clean for alias in aliases) and c_type in path_clean:
+                        return path
+                        
+                # 3. Yolo Matching: Just look for the type
+                for path in cnet_paths:
+                    path_clean = path.lower().replace("\\", "/").split("/")[-1]
+                    if c_type in path_clean:
+                        return path
+                        
+                return None
+
+            for instruction in controlbus:
+                c_type = instruction.get("control_type", "unknown")
+                strength = instruction.get("strength", 1.0)
+                c_image = instruction.get("image", None)
+                
+                if not c_image is None:
+                    cnet_filename = _resolve_controlnet(final_model_type, c_type)
+                    if cnet_filename:
+                        cnet_path = folder_paths.get_full_path("controlnet", cnet_filename)
+                        print(f"[ShimaMasterPrompt] Loading ControlNet: {cnet_filename}")
+                        # Load actual comfy controlnet model
+                        controlnet = comfy.sd.load_controlnet(cnet_path)
+                        
+                        # Apply to Positive (ComfyUI native wrapping)
+                        new_pos_cond = []
+                        for t in pos_cond:
+                            n = [t[0], t[1].copy()]
+                            c_net = controlnet.copy().set_cond_hint(c_image, strength, (0.0, 1.0))
+                            if "control" in n[1]:
+                                c_net.set_previous_controlnet(n[1]["control"])
+                            n[1]["control"] = c_net
+                            n[1]["control_apply_to_uncond"] = False # Matches ComfyUI Advanced default
+                            new_pos_cond.append(n)
+                        pos_cond = new_pos_cond
+                        
+                        # Apply to Negative (If enabled / advanced)
+                        new_neg_cond = []
+                        for t in neg_cond:
+                            n = [t[0], t[1].copy()]
+                            c_net = controlnet.copy().set_cond_hint(c_image, strength, (0.0, 1.0))
+                            if "control" in n[1]:
+                                c_net.set_previous_controlnet(n[1]["control"])
+                            n[1]["control"] = c_net
+                            n[1]["control_apply_to_uncond"] = False
+                            new_neg_cond.append(n)
+                        neg_cond = new_neg_cond
+                        
+                        print(f"[ShimaMasterPrompt] Applied {c_type} ControlNet ({strength}) successfully.")
+                    else:
+                        print(f"[ShimaMasterPrompt] WARNING: Could not find any ControlNet matching architecture '{final_model_type}' and type '{c_type}'. Skipping.")
 
         # Formatting used values for UI display
         source = "CommonParams" if (use_commonparams and common_params) else "Widget"
