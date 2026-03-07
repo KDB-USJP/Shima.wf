@@ -9,7 +9,8 @@ class ShimaMasterPrompt:
             "required": {
                 "positive": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": "Positive Prompt", "tooltip": "Main positive prompt"}),
                 "negative": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": "Negative Prompt", "tooltip": "Main negative prompt"}),
-                "model_type": (["sdxl", "sd1.5", "sd3", "flux", "auraflow", "hunyuan"],),
+                "model_type": (["sdxl", "sd1.5", "sd2.x", "sd3", "flux", "pony", "illustrious",
+                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream"],),
 
             },
             "optional": {
@@ -38,6 +39,12 @@ class ShimaMasterPrompt:
                 "t5_weight": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
                 "positive_t5": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": "", "tooltip": "T5 Positive (SD3/Flux complex text)"}),
                 "negative_t5": ("STRING", {"multiline": True, "dynamicPrompts": True, "default": ""}),
+
+                # Flux/Chroma-specific
+                "flux_guidance": ("FLOAT", {"default": 3.5, "min": 0.0, "max": 100.0, "step": 0.1, "tooltip": "Guidance scale for Flux/Chroma models (auto-applied when model_type is flux or chroma)"}),
+
+                # Lumina2-specific
+                "lumina_sysprompt": ("STRING", {"multiline": True, "default": "", "tooltip": "System prompt prefix for Lumina2. Leave blank to use the default. Only used when model_type is lumina2."}),
 
                 # Shima Integration (Widgets)
                 "use_commonparams": ("BOOLEAN", {"default": False, "tooltip": "If True, use model_type from Shima.Commons bundle."}),
@@ -90,6 +97,17 @@ class ShimaMasterPrompt:
         final_model_type = final_model_type.lower().strip()
         print(f"[ShimaMasterPrompt] Encoding for: {final_model_type}")
 
+        # Auto-prepend Lumina2 system prompt
+        if final_model_type == "lumina2":
+            lumina_default = ("You are an advanced image generation assistant designed to "
+                             "generate high-quality realistic images, specialized in creating "
+                             "highly detailed, high-resolution photography that precisely matches "
+                             "user prompts, including tag-based prompts. <Prompt Start> ")
+            custom_sysprompt = kwargs.get("lumina_sysprompt", "").strip()
+            sysprompt = custom_sysprompt if custom_sysprompt else lumina_default
+            positive = sysprompt + positive
+            print(f"[ShimaMasterPrompt] Lumina2 system prompt applied ({len(sysprompt)} chars)")
+
         # Helper to encode text to condition
         def get_conditioning(text, l_text=None, g_text=None, t5_text=None):
             # If specific texts are provided, we might need advanced logic.
@@ -128,12 +146,22 @@ class ShimaMasterPrompt:
         # Wait, if `clip.encode(positive)` returns [[tensor, dict]], then `pos_cond` was correct?
         # Let's verify via the helper above which explicitly calls `encode_from_tokens`.
         
+        # Apply FluxGuidance for Flux and Chroma (Flux variant)
+        if final_model_type in ("flux", "chroma"):
+            guidance = kwargs.get("flux_guidance", 3.5)
+            pos_cond = [[t[0], {**t[1], "guidance": guidance}] for t in pos_cond]
+            print(f"[ShimaMasterPrompt] Applied FluxGuidance: {guidance}")
+
         # Formatting used values for UI display
         source = "CommonParams" if (use_commonparams and common_params) else "Widget"
         used_values_text = [
             f"Source: {source}",
             f"Model: {final_model_type}"
         ]
+        if final_model_type in ("flux", "chroma"):
+            used_values_text.append(f"Guidance: {kwargs.get('flux_guidance', 3.5)}")
+        if final_model_type == "lumina2":
+            used_values_text.append("Lumina2 sysprompt: active")
 
         # Construct Internal BNDL
         masterprompt_bndl = {

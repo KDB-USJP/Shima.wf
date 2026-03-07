@@ -166,10 +166,16 @@ class ShimaCommons:
             "model_type": {
                 "sdxl": "sdxl",
                 "sd1.5": "sd1.5",
+                "sd2.x": "sd2.x",
                 "sd3": "sd3",
                 "flux": "flux",
-                "auraflow": "sdxl", # Fallback
-                "hunyuan": "sdxl"   # Fallback
+                "pony": "sdxl",
+                "illustrious": "sdxl",
+                "auraflow": "sdxl",
+                "hunyuan": "sdxl",
+                "lumina2": "flux",   # Uses Flux-VAE-16CH
+                "chroma": "flux",    # Flux variant
+                "hidream": "sd3",    # SD3-like pipeline
             }.get(model_type, "sdxl"),
             "aspect_ratio": aspect_ratio,
             "orientation": orientation
@@ -194,13 +200,13 @@ class ShimaCommons:
         # Normalize preset for check
         p = preset.lower() if preset else ""
         
-        # Base resolutions
-        # SDXL, SD3, Flux, AuraFlow, Hunyuan all use 1024 base or higher usually
-        # SD1.5 uses 512
-        if p in ["sdxl", "sd3", "flux", "auraflow", "hunyuan"]:
-            base = 1024
+        # Base resolutions per model type
+        # sd2.x uses 768, sd1.5 uses 512, everything else uses 1024
+        base_res = {"sd1.5": 512, "sd2.x": 768}
+        if p in base_res:
+            base = base_res[p]
         else:
-            base = 512
+            base = 1024
         
         # AR Ratios matches
         ratios = {

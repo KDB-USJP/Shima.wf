@@ -10,33 +10,37 @@ import { addShimaToolbar } from "./shima_topbar.js";
 
 const MODEL_CONFIGS = {
     "sd1.5": ["clip_l_weight", "positive_l", "negative_l"],
-    "sdxl": [
-        "clip_l_weight", "positive_l", "negative_l",
-        "clip_g_weight", "positive_g", "negative_g"
-    ],
-    "sd3": [
-        "clip_l_weight", "positive_l", "negative_l",
+    "sd2.x": ["clip_g_weight", "positive_g", "negative_g"],
+    "sdxl": ["clip_l_weight", "positive_l", "negative_l",
+        "clip_g_weight", "positive_g", "negative_g"],
+    "pony": ["clip_l_weight", "positive_l", "negative_l",
+        "clip_g_weight", "positive_g", "negative_g"],
+    "illustrious": ["clip_l_weight", "positive_l", "negative_l",
+        "clip_g_weight", "positive_g", "negative_g"],
+    "sd3": ["clip_l_weight", "positive_l", "negative_l",
         "clip_g_weight", "positive_g", "negative_g",
-        "t5_weight", "positive_t5", "negative_t5"
-    ],
-    "flux": [
-        "clip_l_weight", "positive_l", "negative_l",
-        "t5_weight", "positive_t5", "negative_t5"
-    ],
-    "auraflow": [
+        "t5_weight", "positive_t5", "negative_t5"],
+    "flux": ["clip_l_weight", "positive_l", "negative_l",
+        "t5_weight", "positive_t5", "negative_t5",
+        "flux_guidance"],
+    "auraflow": ["clip_g_weight", "positive_g", "negative_g",
+        "t5_weight", "positive_t5", "negative_t5"],
+    "hunyuan": ["clip_l_weight", "positive_l", "negative_l",
+        "t5_weight", "positive_t5", "negative_t5"],
+    "lumina2": ["lumina_sysprompt"],  // Gemma-2-2B single encoder, no CLIP sub-encoders
+    "chroma": ["t5_weight", "positive_t5", "negative_t5",
+        "flux_guidance"],
+    "hidream": ["clip_l_weight", "positive_l", "negative_l",
         "clip_g_weight", "positive_g", "negative_g",
-        "t5_weight", "positive_t5", "negative_t5"
-    ],
-    "hunyuan": [
-        "clip_l_weight", "positive_l", "negative_l",
-        "t5_weight", "positive_t5", "negative_t5"
-    ]
+        "t5_weight", "positive_t5", "negative_t5"],
 };
 
 const ALL_CONTROLLED_WIDGETS = [
     "clip_l_weight", "positive_l", "negative_l",
     "clip_g_weight", "positive_g", "negative_g",
-    "t5_weight", "positive_t5", "negative_t5"
+    "t5_weight", "positive_t5", "negative_t5",
+    "flux_guidance",
+    "lumina_sysprompt"
 ];
 
 app.registerExtension({

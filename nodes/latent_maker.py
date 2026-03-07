@@ -40,9 +40,19 @@ class ShimaLatentMaker:
     # Base resolutions per model type
     MODEL_BASES = {
         "sd1.5": {"base": 512, "channels": 4},
+        "sd2.x": {"base": 768, "channels": 4},
         "sdxl": {"base": 1024, "channels": 4},
         "sd3": {"base": 1024, "channels": 16},
         "flux": {"base": 1024, "channels": 16},
+    }
+    
+    # Map user-facing model names to their latent format key
+    MODEL_TYPE_MAP = {
+        "sd1.5": "sd1.5", "sd2.x": "sd2.x",
+        "sdxl": "sdxl", "pony": "sdxl", "illustrious": "sdxl",
+        "sd3": "sd3", "hidream": "sd3",
+        "flux": "flux", "chroma": "flux", "lumina2": "flux",
+        "auraflow": "sdxl", "hunyuan": "sdxl",
     }
     
     @classmethod
@@ -54,9 +64,10 @@ class ShimaLatentMaker:
                 "s33d_mode": (["fixed", "increment", "decrement", "randomize"], {"default": "fixed", "tooltip": "Control seed behavior (applied to base seed)"}),
                 
                 # Model type (affects latent channels)
-                "model_type": (["sdxl", "sd1.5", "sd3", "flux"], {
+                "model_type": (["sdxl", "sd1.5", "sd2.x", "sd3", "flux", "pony", "illustrious",
+                                "auraflow", "hunyuan", "lumina2", "chroma", "hidream"], {
                     "default": "sdxl",
-                    "tooltip": "Select Model Type (SDXL=4ch, SD3/Flux=16ch)"
+                    "tooltip": "Select Model Type — determines latent channels and base resolution"
                 }),
                 
                 # Aspect Ratio / Dimensions
@@ -187,9 +198,9 @@ class ShimaLatentMaker:
         
         # Get model config basics using effective model type
         # Use lowercase for safety as Commons standardizes to lowercase
+        # Resolve user-facing model type to latent format key
         mt = effective_model_type.lower() if effective_model_type else "sdxl"
-        if mt not in self.MODEL_BASES:
-            mt = "sdxl" # Fallback
+        mt = self.MODEL_TYPE_MAP.get(mt, "sdxl")
             
         model_config = self.MODEL_BASES[mt]
         base_size = model_config["base"]

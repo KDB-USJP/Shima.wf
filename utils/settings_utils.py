@@ -19,7 +19,12 @@ class ShimaSettings:
     }
 
     DEFAULT_COMMONS = {
-        "model_types": ["sdxl", "sd1.5", "sd3", "flux", "auraflow", "hunyuan"],
+        "model_types": [
+            "sdxl", "sd1.5", "sd2.x", "sd3",
+            "flux", "pony", "illustrious",
+            "auraflow", "hunyuan",
+            "lumina2", "chroma", "hidream"
+        ],
         "aspect_ratios": ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "Custom"],
         "orientations": ["landscape", "portrait", "auto"]
     }
