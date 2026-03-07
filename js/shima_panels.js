@@ -232,7 +232,7 @@ app.registerExtension({
                 this.properties.scale = 1.0;
 
                 let defaultTitle = "Shima Sampler";
-                let defaultH = 273;
+                let defaultH = 305;
                 if (nodeData.name === "Shima.PanelModelCitizen") { defaultTitle = "Model Citizen"; defaultH = 250; }
                 else if (nodeData.name === "Shima.PanelLatentMaker") { defaultTitle = "Latent Maker"; defaultH = 180; }
                 else if (nodeData.name === "Shima.PanelMasterPrompt") { defaultTitle = "Master Prompt"; defaultH = 220; }
@@ -808,7 +808,7 @@ app.registerExtension({
         const panelNodes = ["Shima.PanelSampler", "Shima.PanelModelCitizen", "Shima.PanelLatentMaker", "Shima.PanelMasterPrompt"];
         if (panelNodes.includes(node.comfyClass)) {
             // Determine dynamic chassis height based on whether it needs space for extra aesthetic UI elements (like Sampler)
-            let pcbHeight = 273;
+            let pcbHeight = 305;
             if (node.comfyClass === "Shima.PanelModelCitizen") pcbHeight = 250;
             else if (node.comfyClass === "Shima.PanelLatentMaker") pcbHeight = 180;
             else if (node.comfyClass === "Shima.PanelMasterPrompt") pcbHeight = 220;
