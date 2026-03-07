@@ -152,6 +152,15 @@ class ShimaLatentMaker:
         
         # Handle dot notation input
         shima_commonparams = kwargs.get("shima.commonparams", None)
+
+        # Resilient cast for use_commonparams, as it might come from kwargs as a string
+        # The 'use_commonparams' argument takes precedence if explicitly wired,
+        # but this handles cases where it might be passed via kwargs (e.g., from a panel)
+        _use_commonparams_kwarg = kwargs.get("use_commonparams", use_commonparams)
+        def _parse_bool(v):
+            if isinstance(v, str): return v.lower() not in ("false", "0", "")
+            return bool(v)
+        use_commonparams = _parse_bool(_use_commonparams_kwarg)
         
         # 1. Determine Base Seed
         # Priority: Bundle (if enabled) > Direct Input/Widget

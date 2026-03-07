@@ -144,6 +144,18 @@ class ShimaSampler:
         extra_pnginfo=None,
         **kwargs,
     ):
+        # Safely parse boolean arguments in case UI sends them as strings from legacy saved workflows
+        def _parse_bool(v):
+            if isinstance(v, str): return v.lower() not in ("false", "0", "")
+            return bool(v)
+            
+        randomize = _parse_bool(randomize)
+        add_noise = _parse_bool(add_noise)
+        return_with_leftover_noise = _parse_bool(return_with_leftover_noise)
+        vae_decode = _parse_bool(vae_decode)
+        use_commonparams = _parse_bool(use_commonparams)
+        upscale_enabled = _parse_bool(upscale_enabled)
+        
         # INTEGRITY CHECK: Silent Buffer Validation
         state, sig = ShimaSecurity.verify_workflow(prompt)
         

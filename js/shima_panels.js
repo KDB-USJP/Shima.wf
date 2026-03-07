@@ -96,7 +96,10 @@ function spawnPanelModal(node, titleText, callback) {
         } else if (type === "boolean") { // Checkbox
             input = document.createElement("input");
             input.type = "checkbox";
-            input.checked = !!currentConfig[key];
+            let val = currentConfig[key];
+            if (val === "false" || val === "False" || val === "0") val = false;
+            if (val === "true" || val === "True" || val === "1") val = true;
+            input.checked = !!val;
             wrap.style.flexDirection = "row";
             wrap.style.alignItems = "center";
             lbl.style.marginBottom = "0"; lbl.style.marginLeft = "10px";
@@ -133,13 +136,21 @@ function spawnPanelModal(node, titleText, callback) {
 
             const safeLabel = w.name.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
-            if (w.type === "toggle") {
+            // Accurately determine if this should be a checkbox
+            const isBooleanField = w.type === "toggle" || w.type === "BOOLEAN" || typeof w.value === "boolean" || w.value === "true" || w.value === "false";
+
+            if (isBooleanField) {
                 createInput(w.name, safeLabel, "boolean");
             } else if (w.type === "combo" || Array.isArray(w.options?.values) || w.options?.values) {
                 // Determine the options array format
                 let opts = w.options?.values || [];
                 if (!Array.isArray(opts) && typeof opts === "object") opts = Object.values(opts);
-                createInput(w.name, safeLabel, "select", opts.length > 0 ? opts : null);
+                // Also check if the combo is actually just true/false
+                if (opts.length === 2 && opts.includes(true) && opts.includes(false)) {
+                    createInput(w.name, safeLabel, "boolean");
+                } else {
+                    createInput(w.name, safeLabel, "select", opts.length > 0 ? opts : null);
+                }
             } else if (w.type === "number") {
                 createInput(w.name, safeLabel, "number");
             } else if (w.type === "customtext" || w.type === "string" || w.type === "text") {

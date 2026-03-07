@@ -67,6 +67,13 @@ class ShimaMasterPrompt:
               t5_weight=1.0, positive_t5=None, negative_t5=None,
               use_commonparams=True, **kwargs):
         
+        # Safely parse boolean arguments
+        def _parse_bool(v):
+            if isinstance(v, str): return v.lower() not in ("false", "0", "")
+            return bool(v)
+            
+        use_commonparams = _parse_bool(use_commonparams)
+
         # Priority Logic: Explicit Input > Model Bundle
         modelcitizen = kwargs.get("modelcitizen", None)
         
