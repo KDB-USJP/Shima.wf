@@ -140,6 +140,11 @@ app.registerExtension({
                 if (app.graph) {
                     for (const node of app.graph._nodes) {
                         if (node.comfyClass === "Shima.NoodmanSticker" && !node._noodmanStopped) {
+                            // Skip nodes that have a watch_node_id set (they stop via executed event)
+                            const watchW = node.widgets?.find(w => w.name === "watch_node_id");
+                            const hasWatch = (watchW?.value || "").trim().length > 0;
+                            if (hasWatch) continue;
+
                             const stopW = node.widgets?.find(w => w.name === "stop_after_run");
                             if (stopW?.value !== false) {
                                 node._noodmanStopped = true;
@@ -150,9 +155,27 @@ app.registerExtension({
                 }
             }
         };
+
+        // Listen for individual node execution to stop mascots watching that node
+        const onExecuted = (e) => {
+            const executedNodeId = e?.detail?.node;
+            if (!executedNodeId || !app.graph) return;
+            for (const node of app.graph._nodes) {
+                if (node.comfyClass === "Shima.NoodmanSticker" && !node._noodmanStopped) {
+                    const watchW = node.widgets?.find(w => w.name === "watch_node_id");
+                    const watchId = (watchW?.value || "").trim();
+                    if (watchId && String(executedNodeId) === watchId) {
+                        node._noodmanStopped = true;
+                        node.setDirtyCanvas(true);
+                    }
+                }
+            }
+        };
+
         try {
             const { api } = await import("../../scripts/api.js");
             api.addEventListener("status", onStatus);
+            api.addEventListener("executed", onExecuted);
         } catch (e) {
             // Fallback: no auto-stop
         }
@@ -542,6 +565,16 @@ function showNoodmanModal(node) {
     stopLabel.appendChild(stopText);
     stopRow.appendChild(stopLabel);
 
+    // Watch Node ID
+    const watchRow = createRow("Watch Node ID", "Stop animation when this specific node finishes execution (overrides Stop After Run)");
+    const watchInput = document.createElement("input");
+    watchInput.type = "text";
+    watchInput.placeholder = "e.g. 42";
+    const watchW = node.widgets?.find(w => w.name === "watch_node_id");
+    watchInput.value = watchW?.value || "";
+    watchInput.style.cssText = "width:100%; padding:10px; background:#222; color:white; border:1px solid #444; box-sizing:border-box; font-family:monospace;";
+    watchRow.appendChild(watchInput);
+
     // Scale
     const scaleRow = createRow("Display Scale");
     const scaleInput = document.createElement("input");
@@ -574,6 +607,7 @@ function showNoodmanModal(node) {
         if (val2Input && state2W) state2W.value = val2Input.value;
         if (fpsW) fpsW.value = parseInt(fpsInput.value) || 8;
         if (stopW) stopW.value = stopCheck.checked;
+        if (watchW) watchW.value = watchInput.value.trim();
         if (scaleW) {
             const sc = parseFloat(scaleInput.value) || 1.0;
             scaleW.value = sc;

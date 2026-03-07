@@ -72,6 +72,7 @@ class ShimaNoodmanSticker:
                 "anim_state2": ("STRING", {"default": "B1-B10", "tooltip": "Frame sequence for State 2 (e.g. C1-C10)"}),
                 "fps": ("INT", {"default": 8, "min": 0, "max": 30, "step": 1, "tooltip": "Playback speed (0 = frozen on first frame)"}),
                 "stop_after_run": ("BOOLEAN", {"default": True, "tooltip": "Stop animation when workflow execution finishes"}),
+                "watch_node_id": ("STRING", {"default": "", "tooltip": "Node ID to watch — stops animation when that node finishes (overrides stop_after_run)"}),
                 "scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1, "tooltip": "Display size multiplier"}),
             },
             "optional": {
@@ -108,7 +109,7 @@ class ShimaNoodmanSticker:
             return False
 
     def execute(self, sprite_sheet, columns, rows, trigger_type, state_1_value, state_2_value,
-                anim_idle, anim_state1, anim_state2, fps, stop_after_run, scale, any_input=None):
+                anim_idle, anim_state1, anim_state2, fps, stop_after_run, watch_node_id, scale, any_input=None):
         state = 0
         pass_value = any_input
 

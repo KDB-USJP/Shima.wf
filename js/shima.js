@@ -108,6 +108,7 @@ const USED_VALUES_FIELDS = {
     "Shima.FileSaver": ["project_name", "base_folder", "base_name"],
     "Shima.MultiSaver": ["project", "base_folder"],
     "Shima.Preview": ["folder_path", "filename"],
+    "Shima.PreviewCompare": ["folder_path", "filename"],
     "Shima.StyleIterator": ["style_mode", "name", "current_index", "formatted_name"],
 };
 
@@ -1463,6 +1464,337 @@ function setupShimaPreviewWidgets(node) {
     }, 100);
 
     console.log("[Shima] Set up Preview node with toolbar actions");
+}
+
+/**
+ * Set up Shima.PreviewCompare node with before/after slider
+ * @param {LGraphNode} node - The PreviewCompare node
+ */
+function setupShimaCompareWidgets(node) {
+    // Add toolbar with toggles AND action buttons
+    addShimaToolbar(node, ["commonparams", "external_linking", "|", "copy", "folder", "edit", "save"]);
+    hideToolbarWidgets(node);
+
+    // Preserve toolbar widget values
+    preserveWidgetValues(node, ["use_commonparams", "allow_external_linking"]);
+
+    // ----- Compare State -----
+    node.shimaCompareSide = "left";    // which side is selected for actions
+    node.shimaSliderPos = 0.5;         // 0.0-1.0, horizontal fraction
+    node.shimaDraggingSlider = false;
+    node.shimaLeftPaths = [];
+    node.shimaRightPaths = [];
+    node.shimaLeftImg = null;           // HTMLImageElement
+    node.shimaRightImg = null;          // HTMLImageElement
+    node.shimaCompareReady = false;
+
+    // ----- Toolbar action callbacks -----
+    node.onToolbarCopy = function () {
+        if (!this.shimaCompareReady) return;
+        const paths = this.shimaCompareSide === "left" ? this.shimaLeftPaths : this.shimaRightPaths;
+        if (paths.length > 0) shimaPreviewCopy([paths[0]]);
+    };
+    node.onToolbarFolder = function () {
+        if (!this.shimaCompareReady) return;
+        const paths = this.shimaCompareSide === "left" ? this.shimaLeftPaths : this.shimaRightPaths;
+        if (paths.length > 0) shimaPreviewOpen([paths[0]], false);
+    };
+    node.onToolbarEdit = function () {
+        if (!this.shimaCompareReady) return;
+        const paths = this.shimaCompareSide === "left" ? this.shimaLeftPaths : this.shimaRightPaths;
+        if (paths.length > 0) shimaPreviewOpen([paths[0]], true);
+    };
+    node.onToolbarSave = function () {
+        if (!this.shimaCompareReady) return;
+        const paths = this.shimaCompareSide === "left" ? this.shimaLeftPaths : this.shimaRightPaths;
+        if (paths.length > 0) shimaPreviewSaveAs([paths[0]]);
+    };
+
+    // ----- onExecuted: load both image sets -----
+    const origOnExecuted = node.onExecuted;
+    node.onExecuted = function (message) {
+        if (origOnExecuted) origOnExecuted.call(this, message);
+
+        const compareArray = message?.shima_compare;
+        const compareData = Array.isArray(compareArray) ? compareArray[0] : compareArray;
+
+        if (compareData) {
+            this.shimaLeftPaths = compareData.left_filenames || [];
+            this.shimaRightPaths = compareData.right_filenames || [];
+
+            // Load left image
+            if (this.shimaLeftPaths.length > 0) {
+                const leftImg = new Image();
+                leftImg.src = `/view?filename=${encodeURIComponent(this.shimaLeftPaths[0])}&type=temp&t=${Date.now()}`;
+                leftImg.onload = () => {
+                    this.shimaLeftImg = leftImg;
+                    this.setDirtyCanvas(true, true);
+                };
+            }
+            // Load right image
+            if (this.shimaRightPaths.length > 0) {
+                const rightImg = new Image();
+                rightImg.src = `/view?filename=${encodeURIComponent(this.shimaRightPaths[0])}&type=temp&t=${Date.now()}`;
+                rightImg.onload = () => {
+                    this.shimaRightImg = rightImg;
+                    this.setDirtyCanvas(true, true);
+                };
+            }
+
+            this.shimaCompareReady = true;
+            this.shimaSliderPos = 0.5;
+
+            // Show side selector
+            if (this.shimaSideContainer) {
+                this.shimaSideContainer.style.display = "flex";
+            }
+        }
+    };
+
+    // ----- Canvas rendering: clip-based before/after -----
+    const origOnDrawForeground = node.onDrawForeground;
+    node.onDrawForeground = function (ctx) {
+        // Let ComfyUI draw its normal preview first
+        if (origOnDrawForeground) origOnDrawForeground.call(this, ctx);
+
+        if (!this.shimaCompareReady || !this.shimaLeftImg || !this.shimaRightImg) return;
+
+        // Calculate image area: starts below all widgets, ends above the DOM selector
+        const titleH = LiteGraph.NODE_TITLE_HEIGHT || 20;
+        const domWidgetH = 44; // height of our LEFT/RIGHT DOM widget
+
+        // Find the bottom of the last widget to know where the image area starts
+        let widgetsEndY = titleH;
+        if (this.widgets && this.widgets.length > 0) {
+            for (const w of this.widgets) {
+                if (w.last_y !== undefined && w.computeSize) {
+                    const wh = w.computeSize ? w.computeSize()[1] : 20;
+                    widgetsEndY = Math.max(widgetsEndY, w.last_y + wh + 6);
+                }
+            }
+        }
+        // Also account for input slots
+        if (this.inputs) {
+            const slotBottom = titleH + this.inputs.length * LiteGraph.NODE_SLOT_HEIGHT;
+            widgetsEndY = Math.max(widgetsEndY, slotBottom);
+        }
+
+        const areaX = 0;
+        const areaY = widgetsEndY;
+        const areaW = this.size[0];
+        const areaH = this.size[1] - widgetsEndY - domWidgetH;
+
+        if (areaW <= 0 || areaH <= 0) return;
+
+        // ------ Determine display dimensions (scale larger to smaller) ------
+        const lw = this.shimaLeftImg.naturalWidth;
+        const lh = this.shimaLeftImg.naturalHeight;
+        const rw = this.shimaRightImg.naturalWidth;
+        const rh = this.shimaRightImg.naturalHeight;
+
+        // Use the smaller resolution as target for visual display
+        const targetW = Math.min(lw, rw);
+        const targetH = Math.min(lh, rh);
+
+        // Fit into available area while preserving aspect ratio
+        const targetAspect = targetW / targetH;
+        const areaAspect = areaW / areaH;
+
+        let drawW, drawH;
+        if (targetAspect > areaAspect) {
+            drawW = areaW;
+            drawH = areaW / targetAspect;
+        } else {
+            drawH = areaH;
+            drawW = areaH * targetAspect;
+        }
+
+        const drawX = areaX + (areaW - drawW) / 2;
+        const drawY = areaY + (areaH - drawH) / 2;
+
+        // Slider X position
+        const sliderX = drawX + drawW * this.shimaSliderPos;
+
+        ctx.save();
+
+        // Draw LEFT image (full width, clipped to left of slider)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(drawX, drawY, sliderX - drawX, drawH);
+        ctx.clip();
+        ctx.drawImage(this.shimaLeftImg, drawX, drawY, drawW, drawH);
+        ctx.restore();
+
+        // Draw RIGHT image (full width, clipped to right of slider)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(sliderX, drawY, drawX + drawW - sliderX, drawH);
+        ctx.clip();
+        ctx.drawImage(this.shimaRightImg, drawX, drawY, drawW, drawH);
+        ctx.restore();
+
+        // Draw slider line
+        ctx.beginPath();
+        ctx.moveTo(sliderX, drawY);
+        ctx.lineTo(sliderX, drawY + drawH);
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw slider handle (circle)
+        const handleY = drawY + drawH / 2;
+        ctx.beginPath();
+        ctx.arc(sliderX, handleY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw arrows on handle
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("◀▶", sliderX, handleY);
+
+        // Draw side labels
+        ctx.font = "bold 13px sans-serif";
+        ctx.textBaseline = "top";
+        // Left label
+        ctx.textAlign = "left";
+        const leftLabel = this.shimaCompareSide === "left" ? "◀ LEFT ✓" : "◀ LEFT";
+        ctx.fillStyle = this.shimaCompareSide === "left" ? "rgba(0,200,100,0.85)" : "rgba(255,255,255,0.6)";
+        ctx.fillText(leftLabel, drawX + 6, drawY + 6);
+        // Right label
+        ctx.textAlign = "right";
+        const rightLabel = this.shimaCompareSide === "right" ? "✓ RIGHT ▶" : "RIGHT ▶";
+        ctx.fillStyle = this.shimaCompareSide === "right" ? "rgba(0,200,100,0.85)" : "rgba(255,255,255,0.6)";
+        ctx.fillText(rightLabel, drawX + drawW - 6, drawY + 6);
+
+        // Store bounds for mouse interaction
+        this._compareBounds = { x: drawX, y: drawY, w: drawW, h: drawH };
+
+        ctx.restore();
+    };
+
+    // ----- Mouse interaction: drag slider or select side -----
+    const origOnMouseDown = node.onMouseDown;
+    node.onMouseDown = function (e, localPos, canvas) {
+        if (this._compareBounds && this.shimaCompareReady) {
+            const b = this._compareBounds;
+            const mx = localPos[0];
+            const my = localPos[1];
+
+            if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+                const sliderX = b.x + b.w * this.shimaSliderPos;
+
+                // Check if near slider line (±12px for easy grabbing)
+                if (Math.abs(mx - sliderX) <= 12) {
+                    this.shimaDraggingSlider = true;
+                    return true; // consume event
+                } else {
+                    // Click on a side = select it
+                    this.shimaCompareSide = mx < sliderX ? "left" : "right";
+                    if (this.shimaSideLeftBtn && this.shimaSideRightBtn) {
+                        this.shimaSideLeftBtn.style.background = this.shimaCompareSide === "left" ? "#0a8" : "#444";
+                        this.shimaSideRightBtn.style.background = this.shimaCompareSide === "right" ? "#0a8" : "#444";
+                    }
+                    this.setDirtyCanvas(true, true);
+                    showShimaNotification(`🎯 Selected: ${this.shimaCompareSide.toUpperCase()}`);
+                    return true;
+                }
+            }
+        }
+        if (origOnMouseDown) return origOnMouseDown.call(this, e, localPos, canvas);
+    };
+
+    const origOnMouseMove = node.onMouseMove;
+    node.onMouseMove = function (e, localPos, canvas) {
+        if (this.shimaDraggingSlider && this._compareBounds) {
+            const b = this._compareBounds;
+            const mx = localPos[0];
+            this.shimaSliderPos = Math.max(0.02, Math.min(0.98, (mx - b.x) / b.w));
+            this.setDirtyCanvas(true, true);
+            return true;
+        }
+        if (origOnMouseMove) return origOnMouseMove.call(this, e, localPos, canvas);
+    };
+
+    const origOnMouseUp = node.onMouseUp;
+    node.onMouseUp = function (e, localPos, canvas) {
+        if (this.shimaDraggingSlider) {
+            this.shimaDraggingSlider = false;
+            return true;
+        }
+        if (origOnMouseUp) return origOnMouseUp.call(this, e, localPos, canvas);
+    };
+
+    // ----- DOM widget: side selector buttons -----
+    setTimeout(() => {
+        try {
+            const savedWidth = node.size[0];
+
+            const container = document.createElement("div");
+            container.style.cssText = "display: none; gap: 6px; padding: 6px 10px; justify-content: center; align-items: center;";
+
+            const btnStyle = "flex: 1; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; color: white; transition: background 0.15s;";
+
+            // LEFT button
+            const leftBtn = document.createElement("button");
+            leftBtn.innerHTML = "◀ LEFT";
+            leftBtn.title = "Select left image for toolbar actions";
+            leftBtn.style.cssText = btnStyle + "background: #0a8;";
+            leftBtn.onclick = (e) => {
+                e.stopPropagation();
+                node.shimaCompareSide = "left";
+                leftBtn.style.background = "#0a8";
+                rightBtn.style.background = "#444";
+                node.setDirtyCanvas(true, true);
+                showShimaNotification("🎯 Selected: LEFT");
+            };
+            container.appendChild(leftBtn);
+            node.shimaSideLeftBtn = leftBtn;
+
+            // RIGHT button
+            const rightBtn = document.createElement("button");
+            rightBtn.innerHTML = "RIGHT ▶";
+            rightBtn.title = "Select right image for toolbar actions";
+            rightBtn.style.cssText = btnStyle + "background: #444;";
+            rightBtn.onclick = (e) => {
+                e.stopPropagation();
+                node.shimaCompareSide = "right";
+                rightBtn.style.background = "#0a8";
+                leftBtn.style.background = "#444";
+                node.setDirtyCanvas(true, true);
+                showShimaNotification("🎯 Selected: RIGHT");
+            };
+            container.appendChild(rightBtn);
+            node.shimaSideRightBtn = rightBtn;
+
+            // Add as DOM widget
+            const widget = node.addDOMWidget("shima_compare_selector", "div", container, {
+                serialize: false,
+                hideOnZoom: false,
+            });
+            if (widget) {
+                widget.computeSize = () => [node.size[0], 36];
+            }
+
+            node.shimaSideContainer = container;
+
+            // Set initial size (wider for comparison)
+            const newSize = node.computeSize();
+            node.setSize([Math.max(savedWidth, 380), Math.max(node.size[1], newSize[1], 350)]);
+        } catch (err) {
+            console.error("[Shima] Failed to create compare selector:", err);
+        }
+    }, 100);
+
+    console.log("[Shima] Set up PreviewCompare node with slider");
 }
 
 /**
@@ -2925,6 +3257,8 @@ app.registerExtension({
                 setupPhotoRemixWidgets(this);
             } else if (nodeData.name === "Shima.StyleIterator") {
                 setupStylerWidgets(this);
+            } else if (nodeData.name === "Shima.PreviewCompare") {
+                setupShimaCompareWidgets(this);
             }
         };
     },

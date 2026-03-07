@@ -67,6 +67,7 @@ const NODE_CATEGORY_MAP = {
     // Utility & logic
     "Shima.SmartReroute": "utility",
     "Shima.Preview": "utility",
+    "Shima.PreviewCompare": "utility",
     "Shima.CarouselPreview": "utility",
     "Shima.SeedLogger": "utility",
     "Shima.SeedController": "utility",
