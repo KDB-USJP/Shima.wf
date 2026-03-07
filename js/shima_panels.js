@@ -247,7 +247,7 @@ app.registerExtension({
                 if (nodeData.name === "Shima.PanelModelCitizen") { defaultTitle = "Model Citizen"; defaultH = 250; }
                 else if (nodeData.name === "Shima.PanelLatentMaker") { defaultTitle = "Latent Maker"; defaultH = 180; }
                 else if (nodeData.name === "Shima.PanelMasterPrompt") { defaultTitle = "Master Prompt"; defaultH = 220; }
-                else if (nodeData.name === "Shima.PanelControlAgent") { defaultTitle = "Control Agent"; defaultH = 200; }
+                else if (nodeData.name === "Shima.PanelControlAgent") { defaultTitle = "Control Agent"; defaultH = 260; }
 
                 this.properties.panel_title = defaultTitle;
                 this.bgcolor = "transparent";
@@ -824,7 +824,7 @@ app.registerExtension({
             if (node.comfyClass === "Shima.PanelModelCitizen") pcbHeight = 250;
             else if (node.comfyClass === "Shima.PanelLatentMaker") pcbHeight = 180;
             else if (node.comfyClass === "Shima.PanelMasterPrompt") pcbHeight = 220;
-            else if (node.comfyClass === "Shima.PanelControlAgent") pcbHeight = 200;
+            else if (node.comfyClass === "Shima.PanelControlAgent") pcbHeight = 260;
 
             // Hide all standard widgets to preserve PCB aesthetic
             const pcbCleanup = () => {
@@ -832,7 +832,7 @@ app.registerExtension({
 
                 // 1. Destroy accidentally generated Input Sockets
                 if (node.inputs) {
-                    const keepInputs = ["modelcitizen.bndl", "latentmaker.bndl", "masterprompt.bndl", "modelcitizen", "latentmaker", "masterprompt", "shima.commonparams", "shima.samplercommons", "image", "shima.controlbus"];
+                    const keepInputs = ["modelcitizen.bndl", "latentmaker.bndl", "masterprompt.bndl", "latentmaker", "masterprompt", "shima.commonparams", "shima.samplercommons", "image", "shima.controlbus"];
                     for (let i = node.inputs.length - 1; i >= 0; i--) {
                         if (!keepInputs.includes(node.inputs[i].name)) {
                             node.removeInput(i);
