@@ -187,7 +187,7 @@ class ShimaSampler:
             bundle_seed = shima_commonparams.get("seed")
             if bundle_seed is not None:
                 final_s33d = bundle_seed
-            bundle_model_type = shima_commonparams.get("model_type")
+            bundle_model_type = shima_commonparams.get("model_type_raw", shima_commonparams.get("model_type"))
         elif randomize:
             final_s33d = random.randint(0, 0xffffffffffffffff)
         

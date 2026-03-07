@@ -191,7 +191,7 @@ class ShimaLatentMaker:
         bundle_orientation = None
         
         if use_commonparams and shima_commonparams:
-            bundle_model_type = shima_commonparams.get("model_type")
+            bundle_model_type = shima_commonparams.get("model_type_raw", shima_commonparams.get("model_type"))
             bundle_orientation = shima_commonparams.get("orientation")  
             
         # Determine effective model type
@@ -201,8 +201,8 @@ class ShimaLatentMaker:
         # Get model config basics using effective model type
         # Use lowercase for safety as Commons standardizes to lowercase
         # Resolve user-facing model type to latent format key
-        mt = effective_model_type.lower() if effective_model_type else "sdxl"
-        mt = self.MODEL_TYPE_MAP.get(mt, "sdxl")
+        mt_raw = effective_model_type.lower() if effective_model_type else "sdxl"
+        mt = self.MODEL_TYPE_MAP.get(mt_raw, "sdxl")
             
         model_config = self.MODEL_BASES[mt]
         base_size = model_config["base"]
@@ -275,7 +275,7 @@ class ShimaLatentMaker:
             f"Source: {source}",
             f"Seed: {final_s33d}",
             f"Size: {final_width}x{final_height}",
-            f"Model: {mt.upper()}"
+            f"Model: {mt_raw.upper()}"
         ]
 
         # Construct Internal BNDL

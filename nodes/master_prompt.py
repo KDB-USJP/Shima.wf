@@ -83,7 +83,7 @@ class ShimaMasterPrompt:
         # Check Common Params first
         common_params = kwargs.get("shima.commonparams", {})
         if use_commonparams and common_params:
-            cp_model = common_params.get("model_type")
+            cp_model = common_params.get("model_type_raw", common_params.get("model_type"))
             # Fallback to model_preset if old key used (though we updated it)
             if not cp_model:
                 cp_model = common_params.get("model_preset")

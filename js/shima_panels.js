@@ -129,7 +129,7 @@ function spawnPanelModal(node, titleText, callback) {
     if (node.widgets && node.widgets.length > 0) {
         node.widgets.forEach(w => {
             // Skip hidden systemic properties 
-            if (["panel_title", "panel_font", "payload", "use_commonparams", "allow_external_linking"].includes(w.name)) return;
+            if (["panel_title", "panel_font", "payload", "use_commonparams", "use_samplercommons", "allow_external_linking"].includes(w.name)) return;
 
             const safeLabel = w.name.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
@@ -265,7 +265,7 @@ app.registerExtension({
                 // Hide commonparams widget
                 if (this.widgets) {
                     this.widgets.forEach(w => {
-                        if (w.name === "use_commonparams" || w.name === "allow_external_linking") {
+                        if (w.name === "use_commonparams" || w.name === "use_samplercommons" || w.name === "allow_external_linking") {
                             w.type = "hidden";
                             w.hidden = true;
                             w.computeSize = () => [0, -4];
@@ -313,7 +313,7 @@ app.registerExtension({
                     let validIndex = 0;
                     this.inputs.forEach((inp, i) => {
                         if (!inp) return;
-                        if (["payload", "use_commonparams", "allow_external_linking"].includes(inp.name)) {
+                        if (["payload", "use_commonparams", "use_samplercommons", "allow_external_linking"].includes(inp.name)) {
                             // Banish hidden background variables from physical UI
                             inp.pos = [0, -100];
                             return;
@@ -345,12 +345,13 @@ app.registerExtension({
                 const PADDING = 20 * sc;
 
                 // Hitbox for Switches (Conditional Layouts)
-                let pillWidth = 46 * sc;
+                const samplerCommonsW = this.widgets?.find(w => w.name === "use_samplercommons");
+                let pillWidth = samplerCommonsW ? (84 * sc) : (46 * sc);
                 let pillHeight = 84 * sc;
                 let pillX = PADDING + (6 * sc);
                 let buttonY = H - PADDING - pillHeight - (3 * sc);
 
-                let circle1X = pillX + (pillWidth / 2);
+                let circle1X = pillX + (23 * sc);
                 let circle1Y = buttonY + (22 * sc);
                 let circle2X = circle1X;
                 let circle2Y = buttonY + pillHeight - (22 * sc);
@@ -372,6 +373,17 @@ app.registerExtension({
                     const w = this.widgets?.find(w => w.name === "allow_external_linking");
                     if (w) {
                         w.value = !w.value;
+                        app.graph.setDirtyCanvas(true, true);
+                        return true;
+                    }
+                }
+
+                // SamplerCommons Switch
+                if (samplerCommonsW) {
+                    let circle3X = pillX + (61 * sc);
+                    let circle3Y = buttonY + (22 * sc);
+                    if (Math.hypot(x - circle3X, y - circle3Y) < circleRadius) {
+                        samplerCommonsW.value = !samplerCommonsW.value;
                         app.graph.setDirtyCanvas(true, true);
                         return true;
                     }
@@ -545,7 +557,8 @@ app.registerExtension({
                 // Mockup large ports removed so only native ports draw
 
                 // 3. Status Switch Column (Conditional Layout)
-                let pillWidth = 46 * sc;
+                const samplerCommonsW = this.widgets?.find(w => w.name === "use_samplercommons");
+                let pillWidth = samplerCommonsW ? (84 * sc) : (46 * sc);
                 let pillHeight = 84 * sc;
                 let pillX = PADDING + (6 * sc);
                 let buttonY = H - PADDING - pillHeight - (3 * sc);
@@ -559,7 +572,7 @@ app.registerExtension({
                 ctx.lineWidth = 2 * sc;
                 ctx.stroke();
 
-                let circle1X = pillX + (pillWidth / 2);
+                let circle1X = pillX + (23 * sc);
                 let circle1Y = buttonY + (22 * sc);
                 let circle2X = circle1X;
                 let circle2Y = buttonY + pillHeight - (22 * sc);
@@ -578,6 +591,14 @@ app.registerExtension({
                 const isExtActive = extLinkingW && extLinkingW.value;
 
                 ctx.fillText(isExtActive ? "🔗" : "❌", circle2X, circle2Y);
+
+                // Switch 3 - SamplerCommons Override (🟩 / 🟥)
+                if (samplerCommonsW) {
+                    let circle3X = pillX + (61 * sc);
+                    let circle3Y = buttonY + (22 * sc);
+                    const isSamplerActive = samplerCommonsW.value;
+                    ctx.fillText(isSamplerActive ? "🟩" : "🟥", circle3X, circle3Y);
+                }
 
                 // 4. Main Panel Title Label (Dimensional Button style)
                 let titleH = 46 * sc;
@@ -798,7 +819,7 @@ app.registerExtension({
 
                 // 1. Destroy accidentally generated Input Sockets
                 if (node.inputs) {
-                    const keepInputs = ["modelcitizen.bndl", "latentmaker.bndl", "masterprompt.bndl", "modelcitizen", "latentmaker", "masterprompt", "shima.commonparams"];
+                    const keepInputs = ["modelcitizen.bndl", "latentmaker.bndl", "masterprompt.bndl", "modelcitizen", "latentmaker", "masterprompt", "shima.commonparams", "shima.samplercommons"];
                     for (let i = node.inputs.length - 1; i >= 0; i--) {
                         if (!keepInputs.includes(node.inputs[i].name)) {
                             node.removeInput(i);
