@@ -1,7 +1,17 @@
 import torch
 import torch.nn.functional as F
+import numpy as np
 import comfy.utils
 from nodes import MAX_RESOLUTION
+
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
+# Fallback internal processors for high quality depth and lineart
+from .nikosis_compat import get_depth_processor, get_lineart_processor
 
 class ShimaControlAgent:
     """
@@ -108,9 +118,76 @@ class ShimaControlAgent:
             processed_image = tensor_bchw.permute(0, 2, 3, 1)
             print(f"[ShimaControlAgent] Resized/Cropped image from {img_w}x{img_h} to {target_w}x{target_h} using {fit_method}")
 
+        # ----------------------------------------------------
+        # PREPROCESSOR ROUTING LOGIC
+        # ----------------------------------------------------
+        # We apply the selected preprocessor to the correctly-sized `processed_image` tensor.
+        # Tensor is in [B, H, W, C] with values 0.0-1.0.
+
+        c_type = control_type.lower()
+        processed_np = None
+
+        if c_type == "custom":
+            # Bypass processing entirely, assume user provided a formatted map
+            pass
+            
+        elif c_type == "color":
+            # Extremely fast pixelation for color mood boards
+            tensor_bchw = processed_image.permute(0, 3, 1, 2)
+            # Downscale 64x
+            small = F.interpolate(tensor_bchw, size=(target_h//64, target_w//64), mode="area")
+            # Upscale back to target using nearest neighbor for sharp distinct blocks
+            processed_image = F.interpolate(small, size=(target_h, target_w), mode="nearest").permute(0, 2, 3, 1)
+            
+        elif c_type == "depth":
+            # Use Nikosis depth model (downloads automatically if missing)
+            img_np = processed_image[0].cpu().numpy()
+            processor = get_depth_processor()
+            result_np = processor.process(img_np, resolution=min(target_w, target_h))
+            processed_image = torch.from_numpy(result_np).unsqueeze(0)
+            
+        elif c_type == "lineart":
+            # Use Nikosis lineart model (downloads automatically if missing)
+            img_np = processed_image[0].cpu().numpy()
+            processor = get_lineart_processor()
+            result_np = processor.process(img_np, coarse=False)
+            processed_image = torch.from_numpy(result_np).unsqueeze(0)
+            
+        elif c_type in ["canny", "scribble"]:
+            if HAS_CV2:
+                # Convert 0.0-1.0 tensor to 0-255 uint8 numpy [H, W, C]
+                img_np = (processed_image[0].cpu().numpy() * 255).astype(np.uint8)
+                
+                if c_type == "canny":
+                    # Classic Canny Edge Detection
+                    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+                    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                    # Dynamic thresholding based on median
+                    v = np.median(blurred)
+                    lower = int(max(0, (1.0 - 0.33) * v))
+                    upper = int(min(255, (1.0 + 0.33) * v))
+                    edges = cv2.Canny(blurred, lower, upper)
+                    # Convert back to RGB format 0.0-1.0 tensor
+                    processed_np = cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB).astype(np.float32) / 255.0
+                    
+                elif c_type == "scribble":
+                    # Adaptive Thresholding creates a sketch/scribble look
+                    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+                    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                    edges = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+                    processed_np = cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB).astype(np.float32) / 255.0
+
+                if processed_np is not None:
+                    processed_image = torch.from_numpy(processed_np).unsqueeze(0)
+            else:
+                print("[ShimaControlAgent] WARNING: OpenCV (cv2) is not installed. Canny/Scribble fallbacks are disabled. Passing raw image.")
+        
+        elif c_type == "pose":
+            print("[ShimaControlAgent] WARNING: Native Pose detection requires an external node. Passing raw image to allow standard ControlNet to fail gracefully or use a pre-rendered map.")
+        
         # 4. Create the Instruction Dict
         instruction = {
-            "control_type": control_type.lower(),
+            "control_type": c_type,
             "strength": strength,
             "image": processed_image,
         }
