@@ -777,9 +777,9 @@ async def check_models(request):
     essential_models = {
         "depth_anything_v2": {
             "display_name": "DepthAnythingV2 (Standard Depth)",
-            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Space_pxl", "Depth-Anything-V2-Base-hf", "model.safetensors"),
-            "repo_id": "Space_pxl/Depth-Anything-V2-Base-hf",
-            "filename": "model.safetensors",
+            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Nikos7766", "DepthAnythingV2", "depth_anything_v2_vitl_fp32.safetensors"),
+            "repo_id": "Nikos7766/DepthAnythingV2",
+            "filename": "depth_anything_v2_vitl_fp32.safetensors",
             "subfolder": ""
         },
         "dwpose": {
@@ -812,9 +812,9 @@ async def download_model(request):
         
         essential_models = {
             "depth_anything_v2": {
-                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Space_pxl", "Depth-Anything-V2-Base-hf"),
-                "repo_id": "Space_pxl/Depth-Anything-V2-Base-hf",
-                "filename": "model.safetensors",
+                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Nikos7766", "DepthAnythingV2"),
+                "repo_id": "Nikos7766/DepthAnythingV2",
+                "filename": "depth_anything_v2_vitl_fp32.safetensors",
                 "subfolder": ""
             },
             "dwpose": {

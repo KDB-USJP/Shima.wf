@@ -558,11 +558,6 @@ app.registerExtension({
                 ctx.roundRect(PADDING, PADDING, IN_W, IN_H, 8 * sc);
                 ctx.fill();
 
-                // Inner Shadow for screen recess
-                ctx.strokeStyle = "rgba(0,0,0,0.8)";
-                ctx.lineWidth = 4 * sc;
-                ctx.stroke();
-
                 // Ensure dots are synced before we draw the large ports underneath them
                 this.syncNativePorts();
 
@@ -832,7 +827,7 @@ app.registerExtension({
 
                 // 1. Destroy accidentally generated Input Sockets
                 if (node.inputs) {
-                    const keepInputs = ["modelcitizen.bndl", "latentmaker.bndl", "masterprompt.bndl", "latentmaker", "masterprompt", "shima.commonparams", "shima.samplercommons", "image", "shima.controlbus"];
+                    const keepInputs = ["modelcitizen.bndl", "modelcitizen", "latentmaker.bndl", "masterprompt.bndl", "latentmaker", "masterprompt", "shima.commonparams", "shima.samplercommons", "image", "shima.controlbus"];
                     for (let i = node.inputs.length - 1; i >= 0; i--) {
                         if (!keepInputs.includes(node.inputs[i].name)) {
                             node.removeInput(i);
