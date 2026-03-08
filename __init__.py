@@ -771,25 +771,8 @@ async def nuke_pycache(request):
 @PromptServer.instance.routes.get("/shima/models/check")
 async def check_models(request):
     """Check if essential ControlNet/Aux models are installed."""
-    import folder_paths
     
-    # Define our essential "Mod Manager" models
-    essential_models = {
-        "depth_anything_v2": {
-            "display_name": "DepthAnythingV2 (Standard Depth)",
-            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Nikos7766", "DepthAnythingV2", "depth_anything_v2_vitl_fp32.safetensors"),
-            "repo_id": "Nikos7766/DepthAnythingV2",
-            "filename": "depth_anything_v2_vitl_fp32.safetensors",
-            "subfolder": ""
-        },
-        "dwpose": {
-            "display_name": "DWPose (Standard OpenPose)",
-            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "yzd-v", "DWPose", "yolox_l.onnx"),
-            "repo_id": "yzd-v/DWPose",
-            "filename": "yolox_l.onnx",
-            "subfolder": ""
-        }
-    }
+    essential_models = get_essential_models()
     
     status = {}
     for mod_id, info in essential_models.items():
@@ -799,6 +782,85 @@ async def check_models(request):
         }
         
     return web.json_response({"success": True, "models": status})
+
+def get_essential_models():
+    """Helper to get essential models config properly using ComfyUI folder paths at runtime."""
+    import folder_paths
+    
+    aux_ckpts = os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts")
+    cnet_paths = folder_paths.get_folder_paths("controlnet")
+    controlnet_dir = cnet_paths[0] if cnet_paths else os.path.join(folder_paths.models_dir, "controlnet")
+    
+    return {
+        # --- Preprocessors ---
+        "depth_anything_v2": {
+            "display_name": "DepthAnythingV2 (Standard Depth)",
+            "expected_path": os.path.join(aux_ckpts, "Nikos7766", "DepthAnythingV2", "depth_anything_v2_vitl_fp32.safetensors"),
+            "cache_dir": os.path.join(aux_ckpts, "Nikos7766", "DepthAnythingV2"),
+            "repo_id": "Nikos7766/DepthAnythingV2",
+            "filename": "depth_anything_v2_vitl_fp32.safetensors",
+            "subfolder": ""
+        },
+        "dwpose": {
+            "display_name": "DWPose (Standard OpenPose)",
+            "expected_path": os.path.join(aux_ckpts, "yzd-v", "DWPose", "yolox_l.onnx"),
+            "cache_dir": os.path.join(aux_ckpts, "yzd-v", "DWPose"),
+            "repo_id": "yzd-v/DWPose",
+            "filename": "yolox_l.onnx",
+            "subfolder": ""
+        },
+        # --- FLUX ControlNets ---
+        "flux_canny": {
+            "display_name": "FLUX Canny v3 (XLabs)",
+            "expected_path": os.path.join(controlnet_dir, "flux-canny-controlnet-v3.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "XLabs-AI/flux-controlnet-collections",
+            "filename": "flux-canny-controlnet-v3.safetensors",
+            "subfolder": ""
+        },
+        "flux_depth": {
+            "display_name": "FLUX Depth v3 (XLabs)",
+            "expected_path": os.path.join(controlnet_dir, "flux-depth-controlnet-v3.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "XLabs-AI/flux-controlnet-collections",
+            "filename": "flux-depth-controlnet-v3.safetensors",
+            "subfolder": ""
+        },
+        # --- SDXL ControlNets ---
+        "sdxl_canny": {
+            "display_name": "SDXL Canny (Mid)",
+            "expected_path": os.path.join(controlnet_dir, "diffusers_xl_canny_mid.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "lllyasviel/sd_control_collection",
+            "filename": "diffusers_xl_canny_mid.safetensors",
+            "subfolder": ""
+        },
+        "sdxl_depth": {
+            "display_name": "SDXL Depth (Mid)",
+            "expected_path": os.path.join(controlnet_dir, "diffusers_xl_depth_mid.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "lllyasviel/sd_control_collection",
+            "filename": "diffusers_xl_depth_mid.safetensors",
+            "subfolder": ""
+        },
+        # --- SD1.5 ControlNets ---
+        "sd15_canny": {
+            "display_name": "SD1.5 Canny (fp16)",
+            "expected_path": os.path.join(controlnet_dir, "control_v11p_sd15_canny_fp16.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "comfyanonymous/ControlNet-v1-1_fp16_safetensors",
+            "filename": "control_v11p_sd15_canny_fp16.safetensors",
+            "subfolder": ""
+        },
+        "sd15_depth": {
+            "display_name": "SD1.5 Depth (fp16)",
+            "expected_path": os.path.join(controlnet_dir, "control_v11p_sd15_depth_fp16.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "comfyanonymous/ControlNet-v1-1_fp16_safetensors",
+            "filename": "control_v11p_sd15_depth_fp16.safetensors",
+            "subfolder": ""
+        }
+    }
 
 @PromptServer.instance.routes.post("/shima/models/download")
 async def download_model(request):
@@ -810,20 +872,7 @@ async def download_model(request):
         data = await request.json()
         model_id = data.get("model_id")
         
-        essential_models = {
-            "depth_anything_v2": {
-                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Nikos7766", "DepthAnythingV2"),
-                "repo_id": "Nikos7766/DepthAnythingV2",
-                "filename": "depth_anything_v2_vitl_fp32.safetensors",
-                "subfolder": ""
-            },
-            "dwpose": {
-                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "yzd-v", "DWPose"),
-                "repo_id": "yzd-v/DWPose",
-                "filename": "yolox_l.onnx", 
-                "subfolder": ""
-            }
-        }
+        essential_models = get_essential_models()
         
         if model_id not in essential_models:
             return web.json_response({"success": False, "error": "Unknown model ID"}, status=400)
