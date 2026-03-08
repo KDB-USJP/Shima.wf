@@ -24,9 +24,10 @@ class ShimaControlAgent:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "control_type": (["canny", "depth", "pose", "lineart", "scribble", "color", "custom"], {"default": "canny"}),
+                "control_type": (["canny", "depth", "pose", "lineart", "scribble", "color"], {"default": "canny"}),
                 "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.05}),
                 "fit_method": (["crop to fit", "pad to fit", "stretch"], {"default": "crop to fit"}),
+                "bypass_preprocessing": ("BOOLEAN", {"default": False, "tooltip": "Check this box if your image is already properly formatted for your chosen controlnet."}),
             },
             "optional": {
                 "shima.commonparams": ("DICT", {"forceInput": True, "tooltip": "Provides the target latent resolution for auto-sizing."}),
@@ -40,7 +41,7 @@ class ShimaControlAgent:
     FUNCTION = "apply_control"
     CATEGORY = "Shima/ControlNet"
 
-    def apply_control(self, image, control_type, strength, fit_method, **kwargs):
+    def apply_control(self, image, control_type, strength, fit_method, bypass_preprocessing=False, **kwargs):
         # 1. Resolve Target Dimensions
         target_w, target_h = 1024, 1024 # Safest fallback
         
@@ -127,7 +128,7 @@ class ShimaControlAgent:
         c_type = control_type.lower()
         processed_np = None
 
-        if c_type == "custom":
+        if bypass_preprocessing:
             # Bypass processing entirely, assume user provided a formatted map
             pass
             
