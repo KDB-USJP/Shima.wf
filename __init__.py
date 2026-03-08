@@ -844,11 +844,11 @@ def get_essential_models():
             "subfolder": ""
         },
         "sdxl_lineart": {
-            "display_name": "SDXL Lineart (Mid)",
-            "expected_path": os.path.join(controlnet_dir, "diffusers_xl_lineart_mid.safetensors"),
+            "display_name": "SDXL Lineart (Adapter)",
+            "expected_path": os.path.join(controlnet_dir, "t2i-adapter_diffusers_xl_lineart.safetensors"),
             "cache_dir": controlnet_dir,
             "repo_id": "lllyasviel/sd_control_collection",
-            "filename": "diffusers_xl_lineart_mid.safetensors",
+            "filename": "t2i-adapter_diffusers_xl_lineart.safetensors",
             "subfolder": ""
         },
         # --- SD1.5 ControlNets ---
