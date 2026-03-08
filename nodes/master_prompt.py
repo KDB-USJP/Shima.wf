@@ -214,11 +214,14 @@ class ShimaMasterPrompt:
                         # Load actual comfy controlnet model
                         controlnet = comfy.controlnet.load_controlnet(cnet_path)
                         
+                        # Convert image from ComfyUI [B, H, W, C] to PyTorch [B, C, H, W] for the ControlNet
+                        c_image_bchw = c_image.movedim(-1, 1)
+                        
                         # Apply to Positive (ComfyUI native wrapping)
                         new_pos_cond = []
                         for t in pos_cond:
                             n = [t[0], t[1].copy()]
-                            c_net = controlnet.copy().set_cond_hint(c_image, strength, (0.0, 1.0))
+                            c_net = controlnet.copy().set_cond_hint(c_image_bchw, strength, (0.0, 1.0))
                             if "control" in n[1]:
                                 c_net.set_previous_controlnet(n[1]["control"])
                             n[1]["control"] = c_net
@@ -230,7 +233,7 @@ class ShimaMasterPrompt:
                         new_neg_cond = []
                         for t in neg_cond:
                             n = [t[0], t[1].copy()]
-                            c_net = controlnet.copy().set_cond_hint(c_image, strength, (0.0, 1.0))
+                            c_net = controlnet.copy().set_cond_hint(c_image_bchw, strength, (0.0, 1.0))
                             if "control" in n[1]:
                                 c_net.set_previous_controlnet(n[1]["control"])
                             n[1]["control"] = c_net
