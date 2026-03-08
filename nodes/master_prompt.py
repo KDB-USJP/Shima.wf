@@ -166,6 +166,11 @@ class ShimaMasterPrompt:
 
         # --- SHIMA CONTROLBUS INTEGRATION ---
         controlbus = kwargs.get("shima.controlbus", [])
+        
+        # If bypassed, ComfyUI passes through an upstream tensor instead of a list. Sanitize.
+        if not isinstance(controlbus, list):
+            controlbus = []
+            
         if controlbus:
             print(f"[ShimaMasterPrompt] Found {len(controlbus)} ControlNets on the bus. Applying...")
             
