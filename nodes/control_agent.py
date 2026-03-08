@@ -150,7 +150,7 @@ class ShimaControlAgent:
             # Use Nikosis lineart model (downloads automatically if missing)
             img_np = processed_image[0].cpu().numpy()
             processor = get_lineart_processor()
-            result_np = processor.process(img_np, coarse=False)
+            result_np = processor.process(img_np)
             processed_image = torch.from_numpy(result_np).unsqueeze(0)
             
         elif c_type in ["canny", "scribble"]:

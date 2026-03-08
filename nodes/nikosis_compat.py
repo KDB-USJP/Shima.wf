@@ -552,19 +552,9 @@ class ShimaDepthProcessor:
             from safetensors.torch import load_file
             state_dict = load_file(model_path)
         
-        # Try to use accelerate for efficient loading if available
-        try:
-            from accelerate import init_empty_weights
-            from accelerate.utils import set_module_tensor_to_device
-            
-            for key in state_dict:
-                set_module_tensor_to_device(
-                    self.model, key, device=self.device, 
-                    dtype=config['dtype'], value=state_dict[key]
-                )
-        except ImportError:
-            self.model.load_state_dict(state_dict)
-            self.model.to(self.device)
+        # Load weights into the model
+        self.model.load_state_dict(state_dict)
+        self.model.to(self.device)
         
         self.model.eval()
         self.current_model_name = model_name
