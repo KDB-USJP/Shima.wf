@@ -988,6 +988,16 @@ function setupLatentMakerWidgets(node) {
 }
 
 /**
+ * Shima.ControlAgent - Toolbar setup
+ * @param {LGraphNode} node - The ControlAgent node
+ */
+function setupControlAgentWidgets(node) {
+    addShimaToolbar(node, ["commonparams", "external_linking"]);
+    hideToolbarWidgets(node);
+    preserveWidgetValues(node, ["use_commonparams", "allow_external_linking"]);
+}
+
+/**
  * Shima.Sampler - Toolbar setup
  * Has both use_commonparams and allow_external_linking
  * @param {LGraphNode} node - The Sampler node
@@ -3294,6 +3304,8 @@ app.registerExtension({
                 setupContentPopup(this);
             } else if (nodeData.name === "Shima.Sticker") {
                 setupStickerWidgets(this);
+            } else if (nodeData.name === "Shima.ControlAgent" || nodeData.name === "Shima.PanelControlAgent") {
+                setupControlAgentWidgets(this);
             } else if (nodeData.name === "Shima.Sampler") {
                 setupSamplerWidgets(this);
             } else if (nodeData.name === "Shima.PhotoRemix") {
