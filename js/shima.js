@@ -4353,6 +4353,7 @@ function setupStickerWidgets(node) {
         }
 
         ctx.restore();
+        return true; // Overrides litegraph default box rendering entirely
     };
 
     setTimeout(update, 100);

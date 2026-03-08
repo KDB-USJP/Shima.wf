@@ -159,6 +159,7 @@ app.registerExtension({
                 });
 
                 ctx.restore();
+                return true; // Overrides litegraph default box rendering entirely
             };
 
             // Delay the resize tracker to avoid blocking initial setup
