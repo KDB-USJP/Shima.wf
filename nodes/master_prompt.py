@@ -169,7 +169,6 @@ class ShimaMasterPrompt:
         if controlbus:
             print(f"[ShimaMasterPrompt] Found {len(controlbus)} ControlNets on the bus. Applying...")
             
-            # Helper to find the right model path
             def _resolve_controlnet(architecture, c_type):
                 cnet_paths = folder_paths.get_filename_list("controlnet")
                 architecture_clean = architecture.replace(".", "").lower() # e.g. "sd1.5" -> "sd15"
@@ -193,11 +192,38 @@ class ShimaMasterPrompt:
                     if any(alias in path_clean for alias in aliases) and c_type in path_clean:
                         return path
                         
-                # 3. Yolo Matching: Just look for the type
-                for path in cnet_paths:
-                    path_clean = path.lower().replace("\\", "/").split("/")[-1]
-                    if c_type in path_clean:
-                        return path
+                # 3. Yolo Matching Removed. If we get here, the model is MISSING.
+                # Auto-Download the essential model
+                try:
+                    from custom_nodes.Shima.__init__ import get_essential_models
+                    from huggingface_hub import hf_hub_download
+                    
+                    models = get_essential_models()
+                    target_key = f"{architecture_clean}_{c_type}"
+                    
+                    if target_key in models:
+                        info = models[target_key]
+                        print(f"[ShimaMasterPrompt] Required ControlNet '{target_key}' not found locally. Auto-downloading...")
+                        
+                        dl_path = hf_hub_download(
+                            repo_id=info["repo_id"],
+                            filename=info["filename"],
+                            subfolder=info["subfolder"] if info["subfolder"] else None,
+                            cache_dir=info["cache_dir"],
+                            local_dir=info["cache_dir"]
+                        )
+                        print(f"[ShimaMasterPrompt] Auto-download complete: {dl_path}")
+                        
+                        # Return the newly downloaded path
+                        # We must return the filename relative to the controlnet directory
+                        # Let's just recursively search the controlnet folder again.
+                        cnet_paths_new = folder_paths.get_filename_list("controlnet")
+                        for path in cnet_paths_new:
+                            path_clean = path.replace("\\", "/")
+                            if info["filename"] in path_clean:
+                                return path
+                except Exception as e:
+                    print(f"[ShimaMasterPrompt] Failed to auto-download missing ControlNet '{architecture_clean}_{c_type}': {e}")
                         
                 return None
 

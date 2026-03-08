@@ -843,6 +843,14 @@ def get_essential_models():
             "filename": "diffusers_xl_depth_mid.safetensors",
             "subfolder": ""
         },
+        "sdxl_lineart": {
+            "display_name": "SDXL Lineart",
+            "expected_path": os.path.join(controlnet_dir, "controlnet-lineart-sdxl-1.0", "diffusion_pytorch_model.safetensors"),
+            "cache_dir": os.path.join(controlnet_dir, "controlnet-lineart-sdxl-1.0"),
+            "repo_id": "xinsir/controlnet-lineart-sdxl-1.0",
+            "filename": "diffusion_pytorch_model.safetensors",
+            "subfolder": ""
+        },
         # --- SD1.5 ControlNets ---
         "sd15_canny": {
             "display_name": "SD1.5 Canny (fp16)",
@@ -858,6 +866,14 @@ def get_essential_models():
             "cache_dir": controlnet_dir,
             "repo_id": "comfyanonymous/ControlNet-v1-1_fp16_safetensors",
             "filename": "control_v11p_sd15_depth_fp16.safetensors",
+            "subfolder": ""
+        },
+        "sd15_lineart": {
+            "display_name": "SD1.5 Lineart (fp16)",
+            "expected_path": os.path.join(controlnet_dir, "control_v11p_sd15_lineart_fp16.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "comfyanonymous/ControlNet-v1-1_fp16_safetensors",
+            "filename": "control_v11p_sd15_lineart_fp16.safetensors",
             "subfolder": ""
         }
     }
