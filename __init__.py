@@ -768,6 +768,86 @@ async def nuke_pycache(request):
     except Exception as e:
         return web.json_response({"error": str(e)}, status=500)
 
+@PromptServer.instance.routes.get("/shima/models/check")
+async def check_models(request):
+    """Check if essential ControlNet/Aux models are installed."""
+    import folder_paths
+    
+    # Define our essential "Mod Manager" models
+    essential_models = {
+        "depth_anything_v2": {
+            "display_name": "DepthAnythingV2 (Standard Depth)",
+            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Space_pxl", "Depth-Anything-V2-Base-hf", "model.safetensors"),
+            "repo_id": "Space_pxl/Depth-Anything-V2-Base-hf",
+            "filename": "model.safetensors",
+            "subfolder": ""
+        },
+        "dwpose": {
+            "display_name": "DWPose (Standard OpenPose)",
+            "expected_path": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "yzd-v", "DWPose", "yolox_l.onnx"),
+            "repo_id": "yzd-v/DWPose",
+            "filename": "yolox_l.onnx",
+            "subfolder": ""
+        }
+    }
+    
+    status = {}
+    for mod_id, info in essential_models.items():
+        status[mod_id] = {
+            "display_name": info["display_name"],
+            "installed": os.path.exists(info["expected_path"])
+        }
+        
+    return web.json_response({"success": True, "models": status})
+
+@PromptServer.instance.routes.post("/shima/models/download")
+async def download_model(request):
+    """Trigger a HuggingFace download for an essential model."""
+    try:
+        from huggingface_hub import hf_hub_download
+        import folder_paths
+        
+        data = await request.json()
+        model_id = data.get("model_id")
+        
+        essential_models = {
+            "depth_anything_v2": {
+                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "Space_pxl", "Depth-Anything-V2-Base-hf"),
+                "repo_id": "Space_pxl/Depth-Anything-V2-Base-hf",
+                "filename": "model.safetensors",
+                "subfolder": ""
+            },
+            "dwpose": {
+                "cache_dir": os.path.join(folder_paths.folder_names_and_paths["custom_nodes"][0][0], "comfyui_controlnet_aux", "ckpts", "yzd-v", "DWPose"),
+                "repo_id": "yzd-v/DWPose",
+                "filename": "yolox_l.onnx", 
+                "subfolder": ""
+            }
+        }
+        
+        if model_id not in essential_models:
+            return web.json_response({"success": False, "error": "Unknown model ID"}, status=400)
+            
+        info = essential_models[model_id]
+        print(f"[Shima.Hub] Downloading {model_id} from {info['repo_id']}...")
+        
+        dl_path = hf_hub_download(
+            repo_id=info["repo_id"],
+            filename=info["filename"],
+            subfolder=info["subfolder"] if info["subfolder"] else None,
+            cache_dir=info["cache_dir"],
+            local_dir=info["cache_dir"]
+        )
+        
+        print(f"[Shima.Hub] Successfully downloaded {model_id} to {dl_path}")
+        return web.json_response({"success": True, "path": dl_path})
+        
+    except ImportError:
+        return web.json_response({"success": False, "error": "huggingface_hub pip package is missing. Cannot auto-download."}, status=500)
+    except Exception as e:
+        print(f"[Shima.Hub] Model Download Error: {e}")
+        return web.json_response({"success": False, "error": str(e)}, status=500)
+
 
 # ============================================================================
 # Node Registration

@@ -75,16 +75,18 @@ app.registerExtension({
 
             // 3. Models Section
             const modelsSec = createSection("Models (AI Engine)", "🤖");
-            const modelsInfo = document.createElement("div");
-            modelsInfo.style.color = "#555";
-            modelsInfo.textContent = "Coming soon: Auto-managed model dependencies.";
-            modelsSec.content.appendChild(modelsInfo);
+            const modelsList = document.createElement("div");
+            modelsList.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
+            modelsSec.content.appendChild(modelsList);
 
             dashboard.appendChild(dataSec.section);
             dashboard.appendChild(assetsSec.section);
             dashboard.appendChild(modelsSec.section);
 
             node.addDOMWidget("dashboard_display", "div", dashboard);
+
+            // Shima Hub dynamically expands based on content, but needs a larger baseline
+            node.size = [420, 480];
 
             // --- Asset Row Component ---
             const createAssetRow = (name, isInstalled, isActive) => {
@@ -151,6 +153,55 @@ app.registerExtension({
                 return row;
             };
 
+            const createModelRow = (displayName, modelId, isInstalled, isDownloading) => {
+                const row = document.createElement("div");
+                row.style.cssText = `
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #1a1a1a;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #333;
+                `;
+
+                const label = document.createElement("span");
+                label.textContent = displayName;
+                label.style.color = isInstalled ? "#0c0" : (isDownloading ? "#0af" : "#fb0");
+
+                const left = document.createElement("div");
+                left.style.cssText = `display: flex; align-items: center; gap: 8px;`;
+
+                const statusIcon = document.createElement("span");
+                statusIcon.textContent = isInstalled ? "✅" : (isDownloading ? "⏳" : "📥");
+
+                left.appendChild(statusIcon);
+                left.appendChild(label);
+                row.appendChild(left);
+
+                const actions = document.createElement("div");
+                actions.style.cssText = `display: flex; gap: 4px;`;
+                row.appendChild(actions);
+
+                if (!isInstalled && !isDownloading) {
+                    const dlBtn = document.createElement("button");
+                    dlBtn.textContent = "Download";
+                    dlBtn.style.cssText = `
+                        background: #06c;
+                        border: none;
+                        color: white;
+                        padding: 2px 8px;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 10px;
+                    `;
+                    dlBtn.onclick = () => downloadModel(modelId, displayName);
+                    actions.appendChild(dlBtn);
+                }
+
+                return row;
+            };
+
             // --- Actions ---
             const downloadPack = (pack) => {
                 const originalText = dataStatus.textContent;
@@ -170,6 +221,26 @@ app.registerExtension({
                 }).catch(err => {
                     dataStatus.textContent = `❌ Network Error: ${err}`;
                     dataStatus.style.color = "#f33";
+                });
+            };
+
+            const downloadModel = (modelId, displayName) => {
+                // Optimistic UI update
+                refreshStatus(null, { [modelId]: "downloading" });
+
+                api.fetchApi("/shima/models/download", {
+                    method: "POST",
+                    body: JSON.stringify({ model_id: modelId })
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        refreshStatus();
+                    } else {
+                        alert(`Failed to download ${displayName}: ${data.error}`);
+                        refreshStatus();
+                    }
+                }).catch(err => {
+                    alert(`Network error downloading ${displayName}: ${err}`);
+                    refreshStatus();
                 });
             };
 
@@ -196,7 +267,7 @@ app.registerExtension({
                 });
             };
 
-            const refreshStatus = (forcedPack = null) => {
+            const refreshStatus = (forcedPack = null, downloadingModels = {}) => {
                 // Source active pack from node widget first
                 const activeWidget = node.widgets?.find(w => w.name === "active_pack");
                 const widgetValue = activeWidget ? activeWidget.value : null;
@@ -221,6 +292,19 @@ app.registerExtension({
                                 assetsList.appendChild(createAssetRow(name, installed, name === activePack));
                             });
                         }
+                    });
+
+                    // Fetch ControlNet Models Status
+                    api.fetchApi("/shima/models/check").then(r => r.json()).then(data => {
+                        modelsList.innerHTML = "";
+                        if (data.models) {
+                            Object.entries(data.models).forEach(([modelId, info]) => {
+                                const isDownloading = downloadingModels[modelId] === "downloading";
+                                modelsList.appendChild(createModelRow(info.display_name, modelId, info.installed, isDownloading));
+                            });
+                        }
+                    }).catch(err => {
+                        modelsList.textContent = "Failed to load model status.";
                     });
                 });
             };
