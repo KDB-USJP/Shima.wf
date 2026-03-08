@@ -844,11 +844,11 @@ def get_essential_models():
             "subfolder": ""
         },
         "sdxl_lineart": {
-            "display_name": "SDXL Lineart",
-            "expected_path": os.path.join(controlnet_dir, "controlnet-lineart-sdxl-1.0", "diffusion_pytorch_model.safetensors"),
-            "cache_dir": os.path.join(controlnet_dir, "controlnet-lineart-sdxl-1.0"),
-            "repo_id": "xinsir/controlnet-lineart-sdxl-1.0",
-            "filename": "diffusion_pytorch_model.safetensors",
+            "display_name": "SDXL Lineart (Mid)",
+            "expected_path": os.path.join(controlnet_dir, "diffusers_xl_lineart_mid.safetensors"),
+            "cache_dir": controlnet_dir,
+            "repo_id": "lllyasviel/sd_control_collection",
+            "filename": "diffusers_xl_lineart_mid.safetensors",
             "subfolder": ""
         },
         # --- SD1.5 ControlNets ---
