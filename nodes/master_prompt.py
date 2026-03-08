@@ -1,5 +1,6 @@
 import torch
 import comfy.sd
+import comfy.controlnet
 import comfy.utils
 import folder_paths
 import os
@@ -211,7 +212,7 @@ class ShimaMasterPrompt:
                         cnet_path = folder_paths.get_full_path("controlnet", cnet_filename)
                         print(f"[ShimaMasterPrompt] Loading ControlNet: {cnet_filename}")
                         # Load actual comfy controlnet model
-                        controlnet = comfy.sd.load_controlnet(cnet_path)
+                        controlnet = comfy.controlnet.load_controlnet(cnet_path)
                         
                         # Apply to Positive (ComfyUI native wrapping)
                         new_pos_cond = []
